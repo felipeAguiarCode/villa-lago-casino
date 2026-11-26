@@ -22,6 +22,7 @@ export const FELTS = {
   doubledraw: '#1f3f78',
   showdown: '#0f5f45',
   abyss: '#231a4e',
+  dragontiger: '#5c1d10',
   trump21: '#26202e',
   thb: '#0f5a52',
   crazy4: '#7a3a12',
