@@ -14,6 +14,8 @@ The game is set at the Villa Lago casino, whose symbol is **VL on a golden chip*
 
 > **Play chips only.** There is no real money, no real-money gambling and nothing to buy. Chips have no cash value. "Villa Lago" is an original name, not affiliated with any real casino.
 
+**▶ Play it in the browser: https://felipeaguiarcode.github.io/villa-lago-casino/** (GitHub Pages, published by `.github/workflows/pages.yml` on every push to `main`; on a computer it shows in a portrait frame). The widescreen PC edition is at https://felipeaguiarcode.github.io/villa-lago-casino-pc/ ([repository](https://github.com/felipeAguiarCode/villa-lago-casino-pc)).
+
 ## Games
 
 | Table | Highlights |
@@ -75,4 +77,4 @@ Kenney *Casino Audio* (CC0), *Felt Backgrounds* by jbp4444 (CC0), English patter
 
 ### Português
 
-Cassino de cartas 3D para celular em pé, feito com three.js: 28 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Rode com `npm install` e `npm run dev`.
+Cassino de cartas 3D para celular em pé, feito com three.js: 28 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Jogue no navegador em https://felipeaguiarcode.github.io/villa-lago-casino/ (versão para PC: https://felipeaguiarcode.github.io/villa-lago-casino-pc/) ou rode com `npm install` e `npm run dev`.
