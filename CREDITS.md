@@ -15,7 +15,7 @@ Jogo com **fichas fictícias**: sem dinheiro real, apostas reais ou compras (avi
 
 Splash "Made with CARD ENGINE": logo e animação originais, feitos para o jogo (não usa marca de nenhuma engine real).
 
-Trump 21: modo de blackjack original (baralho de 1 a 11 e cartas trunfo com nomes, efeitos e arte próprios),
+Trump 21: modo de blackjack original (baralho de 1 a 11 e cartas trunfo com nomes, efeitos e arte próprios; os ícones dos trunfos novos foram desenhados em SVG no código e o som do trunfo bônus é sintetizado com WebAudio),
 inspirado na mecânica de "blackjack com trunfos" — não usa personagens, nomes, arte ou marca de nenhum jogo existente.
 
 Criados para o jogo (sem assets externos): coringas e cartas numeradas do Trump 21, índices, naipes, ases e layout das cartas numeradas,

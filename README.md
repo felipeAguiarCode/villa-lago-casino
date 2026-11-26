@@ -21,7 +21,7 @@ The game is set at the Villa Lago casino, whose symbol is **VL on a golden chip*
 | Table | Highlights |
 |---|---|
 | Blackjack | 6 decks, 3:2, split up to 4 hands, double after split, insurance / even money, basic-strategy hint |
-| Trump 21 | Original duel blackjack with an 11-card deck (1–11) and **29 trump cards** in three rarities that change the target, draws and stakes |
+| Trump 21 | Original duel blackjack with an 11-card deck (1–11) and **39 trump cards** in three rarities that change the target, draws and stakes, among them Lighten, Heist, Gift, Overload, Rewind, Barrier (blocks an attack), Bullseye (3:1 right on the target) and Reinforce. About one hit in five turns up a **bonus trump** instead of the card: it flies out of the deck with its own sound, the turn stays yours and the next hit is a sure card. **Press and hold** a trump to read what it does; a tap plays it |
 | Three Card Poker | Ante / Play, Pair Plus, **Lucky 6**, ante bonus, and six table modes: Classic, **Ultimate** (raise up to 3×), **Face Up** (one dealer card shown), **Prime** (colour bet), **Draw** (replace a card), **Hold'em** (shared cards) |
 | Three Card Slots | Slot machine with three card reels, Mini Royal |
 | Video Blackjack | Machine blackjack with up to 5 hands played one by one in a circle around the dealer, coin meters, one split per hand |
@@ -57,7 +57,7 @@ Every table opens with a cardistry show picked at random, never the same one twi
 npm install
 npm run dev          # http://127.0.0.1:5173
 npm run dev -- --host  # open from a phone on the same network
-npm run test         # 230 rule / payout / RTP tests
+npm run test         # 236 rule / payout / RTP tests
 npm run sim:showdown # Showdown Poker balance report → docs/showdown-balance.md
 npm run sim:abyss    # Abyss Poker balance report → docs/abyss-balance.md
 npm run sim:brazil   # Brazilian games balance report → docs/brazil-balance.md

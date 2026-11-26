@@ -273,7 +273,7 @@ describe('Trump 21', () => {
   });
 });
 
-import { TRUMPS, type TrumpId } from '../src/games/trump21/rules';
+import { BONUS_ON_HIT, BULLSEYE_EXTRA, MAX_TRUMPS, TRUMPS, type DuelEvent, type TrumpId } from '../src/games/trump21/rules';
 
 describe('Trump 21 — trump variations', () => {
   const fresh = (seed: number, trumps: TrumpId[]) => {
@@ -283,9 +283,9 @@ describe('Trump 21 — trump variations', () => {
     d.trumps.dealer = [];
     return d;
   };
-  it('has 29 trumps with unique ids', () => {
-    expect(TRUMPS.length).toBe(29);
-    expect(new Set(TRUMPS.map((t) => t.id)).size).toBe(29);
+  it('has 39 trumps with unique ids', () => {
+    expect(TRUMPS.length).toBe(39);
+    expect(new Set(TRUMPS.map((t) => t.id)).size).toBe(39);
   });
   it('draw control: feather, calls, twin, redraw', () => {
     const d = fresh(5, ['feather', 'twin', 'redraw']);
@@ -373,5 +373,105 @@ describe('Trump 21 — trump variations', () => {
       for (const id of d.trumps.player) counts[id] = (counts[id] ?? 0) + 1;
     }
     expect((counts.call5 ?? 0)).toBeGreaterThan((counts.bounty ?? 0) * 2.5);
+  });
+});
+
+describe('Trump 21 — bonus trumps and the newer trumps', () => {
+  /** A duel set to an exact spot: the deck holds every card not in a hand; the dealer always plays his trump. */
+  const spot = (player: number[], dealer: number[], trumps: { player?: TrumpId[]; dealer?: TrumpId[] } = {}, seed = 1) => {
+    const d = new Duel(seededRng(seed));
+    d.start();
+    d.player = player.slice();
+    d.dealer = dealer.slice();
+    d.deck = Array.from({ length: 11 }, (_, i) => i + 1).filter((v) => !player.includes(v) && !dealer.includes(v));
+    d.trumps = { player: (trumps.player ?? []).slice(), dealer: (trumps.dealer ?? []).slice() };
+    d.aggression = 1;
+    return d;
+  };
+  const dealerPlays = (d: Duel) => d.dealerTurn().find((e): e is Extract<DuelEvent, { t: 'trump' }> => e.t === 'trump')?.id ?? null;
+
+  it('about a fifth of the hits that can bring one turn up a bonus trump instead of the card', () => {
+    expect(BONUS_ON_HIT).toBe(0.2);
+    let hits = 0;
+    let bonus = 0;
+    for (let s = 0; s < 3000; s++) {
+      const d = new Duel(seededRng(s));
+      d.start();
+      d.trumps.player = [];
+      for (let k = 0; k < 3 && d.deck.length; k++) {
+        const sure = d.sureCard;
+        const n = d.player.length;
+        const ev = d.hit('player');
+        if (d.lastHitBonus) {
+          // the trump instead of the card: no card, still the player's turn, the next hit is sure
+          expect(d.player.length).toBe(n);
+          expect(ev[0]).toMatchObject({ t: 'gain', side: 'player', bonus: true });
+          expect(d.sureCard).toBe(true);
+          expect(d.stood.player).toBe(false);
+        } else expect(d.player.length).toBe(n + 1);
+        if (sure) {
+          expect(d.lastHitBonus).toBe(false);
+          continue;
+        }
+        hits++;
+        if (d.lastHitBonus) bonus++;
+      }
+    }
+    expect(bonus / hits).toBeGreaterThan(0.17);
+    expect(bonus / hits).toBeLessThan(0.23);
+  });
+
+  it('no bonus with a full trump hand', () => {
+    for (let s = 0; s < 200; s++) {
+      const d = spot([3, 9], [5, 8], { player: Array(MAX_TRUMPS).fill('call2') }, s);
+      expect(d.hit('player').some((e) => e.t === 'draw')).toBe(true);
+    }
+  });
+
+  it('Call 1 / Call 8, Lighten, Heist, Gift, Overload and Rewind', () => {
+    const d = spot([3, 9], [5, 2], { player: ['call1', 'call8'] });
+    d.useTrump('player', 'call1');
+    d.useTrump('player', 'call8');
+    expect(d.player).toEqual([3, 9, 1, 8]);
+    const e = spot([11, 4, 9], [5, 8], { player: ['lighten'] });
+    e.useTrump('player', 'lighten');
+    expect(e.player).toEqual([4, 9]);
+    const f = spot([3, 9], [5, 8, 2], { player: ['heist', 'gift', 'overload', 'rewind'] });
+    expect(f.useTrump('player', 'heist')).toContainEqual({ t: 'move', from: 'dealer', to: 'player', value: 2 });
+    expect(f.player).toEqual([3, 9, 2]);
+    expect(f.useTrump('player', 'gift')).toContainEqual({ t: 'move', from: 'player', to: 'dealer', value: 2 });
+    expect(f.dealer).toEqual([5, 8, 2]);
+    const top = f.deck.slice(0, 2);
+    f.useTrump('player', 'overload');
+    expect(f.dealer).toEqual([5, 8, 2, ...top]);
+    f.useTrump('player', 'rewind');
+    expect(f.player).toEqual([3]);
+    expect(f.dealer).toEqual([5, 8, 2, top[0]]);
+  });
+
+  it("a Barrier blocks the opponent's next attack only", () => {
+    const d = spot([3, 9, 7], [5, 8], { player: ['barrier'], dealer: ['burn', 'burn'] });
+    d.useTrump('player', 'barrier');
+    expect(d.useTrump('dealer', 'burn')).toContainEqual({ t: 'blocked', side: 'player', id: 'burn' });
+    expect(d.player).toEqual([3, 9, 7]);
+    d.useTrump('dealer', 'burn');
+    expect(d.player).toEqual([3, 9]);
+  });
+
+  it('Bullseye pays 3 to 1 right on the target; Reinforce brings two trumps', () => {
+    const d = spot([10, 11], [9, 8], { player: ['bullseye', 'reinforce'] });
+    d.useTrump('player', 'bullseye');
+    expect(d.payout(10)).toBe(10 * (2 + BULLSEYE_EXTRA));
+    d.useTrump('player', 'reinforce');
+    expect(d.trumps.player.length).toBe(2);
+    const e = spot([10, 9], [7, 8], { player: ['bullseye'] });
+    e.useTrump('player', 'bullseye');
+    expect(e.payout(10)).toBe(20);
+  });
+
+  it('the dealer lightens a bust and heists a card that fits him', () => {
+    expect(dealerPlays(spot([2, 7], [6, 11, 5, 3, 1], { dealer: ['recall', 'lighten'] }))).toBe('lighten');
+    expect(dealerPlays(spot([2, 7], [11, 3, 9], { dealer: ['recall', 'lighten'] }))).toBe('recall');
+    expect(dealerPlays(spot([2, 4], [9, 6], { dealer: ['heist'] }))).toBe('heist');
   });
 });

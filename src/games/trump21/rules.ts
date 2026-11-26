@@ -3,6 +3,11 @@ import { cryptoRng, shuffle, type Rng } from '../../core/rng';
 /**
  * Trump 21 — an original "duel" blackjack: one deck of eleven cards numbered 1–11, the player
  * against the dealer, and trump cards that bend the rules (target, draws, stakes…).
+ *
+ * Bonus trumps: the player's hit may turn up a trump card instead of the card (BONUS_ON_HIT, one
+ * hit in five, while the trump hand has room). It joins the hand, the turn stays the player's and
+ * the next hit is a sure card, so the bonus never costs the draw. The dealer's hits bring a trump
+ * along with the card (TRUMP_ON_HIT).
  */
 
 export type Side = 'player' | 'dealer';
@@ -11,15 +16,18 @@ export type TrumpId =
   // draw control
   | 'precision'
   | 'feather'
+  | 'call1'
   | 'call2'
   | 'call3'
   | 'call4'
   | 'call5'
   | 'call6'
   | 'call7'
+  | 'call8'
   | 'twin'
   | 'redraw'
   | 'recall'
+  | 'lighten'
   // information
   | 'glimpse'
   | 'foresight'
@@ -37,11 +45,20 @@ export type TrumpId =
   | 'shatter'
   | 'pickpocket'
   | 'blindfold'
+  | 'heist'
+  | 'gift'
+  | 'overload'
+  | 'rewind'
+  // defence
+  | 'barrier'
   // stakes
   | 'guard'
   | 'fortress'
   | 'stakes'
-  | 'bounty';
+  | 'bounty'
+  | 'bullseye'
+  // supply
+  | 'reinforce';
 
 export type Rarity = 'common' | 'uncommon' | 'rare';
 
@@ -56,15 +73,18 @@ export interface TrumpInfo {
 export const TRUMPS: TrumpInfo[] = [
   { id: 'precision', rarity: 'common', dealer: true },
   { id: 'feather', rarity: 'common' },
+  { id: 'call1', rarity: 'common' },
   { id: 'call2', rarity: 'common' },
   { id: 'call3', rarity: 'common' },
   { id: 'call4', rarity: 'common', dealer: true },
   { id: 'call5', rarity: 'common', dealer: true },
   { id: 'call6', rarity: 'common' },
   { id: 'call7', rarity: 'common' },
+  { id: 'call8', rarity: 'uncommon' },
   { id: 'twin', rarity: 'uncommon' },
   { id: 'redraw', rarity: 'uncommon' },
   { id: 'recall', rarity: 'common', dealer: true },
+  { id: 'lighten', rarity: 'uncommon', dealer: true },
   { id: 'glimpse', rarity: 'common' },
   { id: 'foresight', rarity: 'common' },
   { id: 'reshuffle', rarity: 'common' },
@@ -79,10 +99,17 @@ export const TRUMPS: TrumpInfo[] = [
   { id: 'shatter', rarity: 'uncommon', dealer: true },
   { id: 'pickpocket', rarity: 'rare' },
   { id: 'blindfold', rarity: 'rare' },
+  { id: 'heist', rarity: 'uncommon', dealer: true },
+  { id: 'gift', rarity: 'uncommon' },
+  { id: 'overload', rarity: 'rare' },
+  { id: 'rewind', rarity: 'uncommon' },
+  { id: 'barrier', rarity: 'uncommon', dealer: true },
   { id: 'guard', rarity: 'common' },
   { id: 'fortress', rarity: 'rare' },
   { id: 'stakes', rarity: 'rare' },
   { id: 'bounty', rarity: 'rare' },
+  { id: 'bullseye', rarity: 'rare' },
+  { id: 'reinforce', rarity: 'uncommon' },
 ];
 
 export const RARITY_WEIGHT: Record<Rarity, number> = { common: 10, uncommon: 5, rare: 2 };
@@ -90,9 +117,18 @@ export const rarityOf = (id: TrumpId) => TRUMPS.find((t) => t.id === id)!.rarity
 export const PLAYER_TRUMPS: TrumpId[] = TRUMPS.map((t) => t.id);
 export const DEALER_TRUMPS: TrumpId[] = TRUMPS.filter((t) => t.dealer).map((t) => t.id);
 export const MAX_TRUMPS = 5;
+/** Chance that a card the dealer hits brings a trump along with it. */
 export const TRUMP_ON_HIT = 0.3;
+/** Chance that the player's hit turns up a bonus trump instead of the card (the next hit is then a sure card). */
+export const BONUS_ON_HIT = 0.2;
+/** Bullseye: a win exactly on the target pays this much more (3 to 1; 4 to 1 with Bounty). */
+export const BULLSEYE_EXTRA = 2;
 
-const CALLS: Partial<Record<TrumpId, number>> = { call2: 2, call3: 3, call4: 4, call5: 5, call6: 6, call7: 7 };
+const CALLS: Partial<Record<TrumpId, number>> = { call1: 1, call2: 2, call3: 3, call4: 4, call5: 5, call6: 6, call7: 7, call8: 8 };
+
+/** Trumps aimed at the opponent. A Barrier blocks the first one played against its owner in the round. */
+export const ATTACK_TRUMPS: TrumpId[] = ['burn', 'switch', 'force', 'freeze', 'shatter', 'pickpocket', 'blindfold', 'heist', 'gift', 'overload', 'rewind'];
+export const isAttackTrump = (id: TrumpId) => ATTACK_TRUMPS.includes(id);
 const LINES: Partial<Record<TrumpId, number>> = { line17: 17, line24: 24, line27: 27, reset21: 21 };
 
 export type DuelEvent =
@@ -101,7 +137,12 @@ export type DuelEvent =
   | { t: 'switch'; a: number; b: number }
   | { t: 'target'; n: number }
   | { t: 'trump'; side: Side; id: TrumpId; ok: boolean }
-  | { t: 'gain'; side: Side; id: TrumpId }
+  /** A new trump; `bonus`: it came out of the deck with a hit (the player's draw is still to come). */
+  | { t: 'gain'; side: Side; id: TrumpId; bonus?: boolean }
+  /** Heist / Gift: a card goes from one hand to the other. */
+  | { t: 'move'; from: Side; to: Side; value: number }
+  /** `side`'s Barrier stopped the opponent's attack trump `id`. */
+  | { t: 'blocked'; side: Side; id: TrumpId }
   | { t: 'lose'; side: Side; id: TrumpId; by: 'shatter' | 'pickpocket' }
   | { t: 'foresee'; value: number }
   | { t: 'shuffle' }
@@ -128,6 +169,13 @@ export class Duel {
   blinded = false;
   /** Chance (0..1) that the dealer plays a trump when he has a good one. */
   aggression = 0.6;
+  /** Barrier: the opponent's next attack trump this round is blocked. */
+  barrier: Record<Side, boolean> = { player: false, dealer: false };
+  /** Bullseye: a win exactly on the target pays BULLSEYE_EXTRA more. */
+  bullseye = false;
+  /** The player's last hit drew a bonus trump instead of a card: still the player's turn. */
+  lastHitBonus = false;
+  private sure = false;
   stood: Record<Side, boolean> = { player: false, dealer: false };
   trumps: Record<Side, TrumpId[]>;
   private evs: DuelEvent[] = [];
@@ -204,12 +252,13 @@ export class Duel {
     return pool[0].id;
   }
 
-  private grant(side: Side, chance: number) {
-    if (this.trumps[side].length >= MAX_TRUMPS) return;
-    if (this.rng(1000) >= chance * 1000) return;
+  private grant(side: Side, chance: number, bonus = false): boolean {
+    if (this.trumps[side].length >= MAX_TRUMPS) return false;
+    if (this.rng(1000) >= chance * 1000) return false;
     const id = this.pickTrump(side);
     this.trumps[side].push(id);
-    this.emit({ t: 'gain', side, id });
+    this.emit(bonus ? { t: 'gain', side, id, bonus } : { t: 'gain', side, id });
+    return true;
   }
 
   /** New round: fresh 11-card deck, two cards each (dealer's first face down), one trump each. */
@@ -226,6 +275,10 @@ export class Duel {
     this.knownTop = false;
     this.frozen = { player: false, dealer: false };
     this.blinded = false;
+    this.barrier = { player: false, dealer: false };
+    this.bullseye = false;
+    this.lastHitBonus = false;
+    this.sure = false;
     this.stood = { player: false, dealer: false };
     this.give('player');
     this.give('dealer');
@@ -236,13 +289,32 @@ export class Duel {
     return this.flush();
   }
 
+  /**
+   * A hit. The player's hit may turn up a bonus trump instead of the card (BONUS_ON_HIT): the turn
+   * stays the player's and the next hit is a sure card. The dealer's hit always draws its card and
+   * may bring a trump along with it.
+   */
   hit(side: Side): DuelEvent[] {
+    if (side === 'player') this.lastHitBonus = false;
     if (this.frozen[side]) return this.stand(side);
+    if (side === 'player' && this.deck.length) {
+      if (this.sure) this.sure = false;
+      else if (this.grant('player', BONUS_ON_HIT, true)) {
+        this.lastHitBonus = true;
+        this.sure = true;
+        return this.flush();
+      }
+    }
     if (this.give(side) !== null) {
       this.stood = { player: false, dealer: false };
-      this.grant(side, TRUMP_ON_HIT);
+      if (side === 'dealer') this.grant('dealer', TRUMP_ON_HIT, true);
     } else this.stood[side] = true;
     return this.flush();
+  }
+
+  /** The player's next hit is a sure card (a bonus trump just came out). */
+  get sureCard() {
+    return this.sure;
   }
 
   stand(side: Side): DuelEvent[] {
@@ -260,6 +332,21 @@ export class Duel {
     if (CALLS[id] !== undefined) return this.deck.includes(CALLS[id]!);
     if (LINES[id] !== undefined) return this.target !== LINES[id];
     switch (id) {
+      case 'lighten':
+      case 'gift':
+        return me.length >= 2;
+      case 'heist':
+        return opp.length >= 2;
+      case 'overload':
+        return this.deck.length >= 2;
+      case 'rewind':
+        return me.length >= 2 && opp.length >= 2;
+      case 'barrier':
+        return !this.barrier[side];
+      case 'bullseye':
+        return side === 'player' && !this.bullseye;
+      case 'reinforce':
+        return side === 'player';
       case 'precision':
       case 'feather':
         return this.deck.length > 0;
@@ -309,6 +396,12 @@ export class Duel {
     this.emit({ t: 'trump', side, id, ok: true });
     const other: Side = side === 'player' ? 'dealer' : 'player';
     const drew = () => (this.stood = { player: false, dealer: false });
+    if (this.barrier[other] && isAttackTrump(id)) {
+      // the opponent's Barrier takes the hit: the trump is spent for nothing
+      this.barrier[other] = false;
+      this.emit({ t: 'blocked', side: other, id });
+      return this.flush();
+    }
     if (CALLS[id] !== undefined) {
       this.give(side, CALLS[id]);
       drew();
@@ -417,6 +510,51 @@ export class Duel {
       case 'bounty':
         this.winMult = 2;
         break;
+      case 'lighten': {
+        // the highest card goes back to the deck
+        const h = this[side];
+        const [v] = h.splice(h.indexOf(Math.max(...h)), 1);
+        this.deck.push(v);
+        this.deck = shuffle(this.deck, this.rng);
+        this.knownTop = false;
+        this.emit({ t: 'back', side, value: v });
+        drew();
+        break;
+      }
+      case 'heist': {
+        const v = this[other].pop()!;
+        this[side].push(v);
+        this.emit({ t: 'move', from: other, to: side, value: v });
+        drew();
+        break;
+      }
+      case 'gift': {
+        const v = this[side].pop()!;
+        this[other].push(v);
+        this.emit({ t: 'move', from: side, to: other, value: v });
+        drew();
+        break;
+      }
+      case 'overload':
+        this.give(other);
+        this.give(other);
+        drew();
+        break;
+      case 'rewind':
+        this.giveBack(side);
+        this.giveBack(other);
+        drew();
+        break;
+      case 'barrier':
+        this.barrier[side] = true;
+        break;
+      case 'bullseye':
+        this.bullseye = true;
+        break;
+      case 'reinforce':
+        this.grant(side, 1);
+        this.grant(side, 1);
+        break;
     }
     return this.flush();
   }
@@ -433,10 +571,15 @@ export class Duel {
     return p >= d ? 1 : -1;
   }
 
+  /** What a win pays (to 1): 1, 2 with Bounty, plus BULLSEYE_EXTRA when Bullseye lands exactly on the target. */
+  get winPays() {
+    return this.winMult + (this.bullseye && this.total('player') === this.target ? BULLSEYE_EXTRA : 0);
+  }
+
   /** Amount returned on a stake (stake already includes the Stakes Up raise). */
   payout(stake: number): number {
     const o = this.outcome();
-    if (o > 0) return stake * (1 + this.winMult);
+    if (o > 0) return stake * (1 + this.winPays);
     if (this.fortress) return stake;
     return this.guard ? stake / 2 : 0;
   }
@@ -459,7 +602,13 @@ export class Duel {
     const est = pv + 6;
     const T = this.target;
     const has = (id: TrumpId) => this.trumps.dealer.includes(id) && this.canUse('dealer', id);
-    if (d > T && has('recall')) return 'recall';
+    if (d > T) {
+      // Recall (the last card) or Lighten (the highest), the one that brings him back under
+      const last = this.dealer[this.dealer.length - 1];
+      if (has('recall') && d - last <= T) return 'recall';
+      if (has('lighten') && d - Math.max(...this.dealer) <= T) return 'lighten';
+      if (has('recall')) return 'recall';
+    }
     if (d > T && d <= 21 && has('reset21')) return 'reset21';
     if (d > T && d <= 24 && has('line24')) return 'line24';
     if (d > T && d <= 27 && has('line27')) return 'line27';
@@ -468,11 +617,16 @@ export class Duel {
     if (est >= T - 3 && est <= T && has('force')) return 'force';
     if (this.player.length >= 2 && this.player[this.player.length - 1] >= 6 && est >= T - 2 && has('burn')) return 'burn';
     if (est <= T - 7 && has('freeze')) return 'freeze';
+    // Heist: the player's last card when it fits his own hand nicely
+    const pl = this.player[this.player.length - 1];
+    if (this.player.length >= 2 && d + pl <= T && d + pl >= T - 3 && has('heist')) return 'heist';
     if (d <= T - 4 && has('precision')) return 'precision';
     for (const c of ['call5', 'call4'] as const) {
       const n = CALLS[c]!;
       if (d + n <= T && d + n >= T - 3 && has(c)) return c;
     }
+    // a Barrier against the player's attacks when the player holds a few trumps
+    if (this.trumps.player.length >= 2 && has('barrier')) return 'barrier';
     return null;
   }
 
