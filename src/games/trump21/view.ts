@@ -1,0 +1,643 @@
+import * as THREE from 'three';
+import gsap from 'gsap';
+import { addStrings, t } from '../../core/i18n';
+import { collectCards, dealCard, flipCard, slideCard, wait } from '../../table/anim';
+import { CARD_H, REST_Y, type Card3D } from '../../table/cardMesh';
+import { FONT, GOLD, INK_SOFT, tablePrint } from '../../table/prints';
+import type { Pin } from '../../ui/hud';
+import { ICONS, type IconName } from '../../ui/icons';
+import { highlightCards, type SpotDef } from '../kit';
+import { TableGame } from '../tableGame';
+import type { GameCtx } from '../types';
+import { Duel, rarityOf, TRUMPS, type DuelEvent, type Side, type TrumpId } from './rules';
+import { cardDataURL } from '../../table/cardFaces';
+
+addStrings(
+  {
+    't21.bet': 'BET',
+    't21.stakes': 'STAKES UP',
+    't21.print1': 'TRUMP 21',
+    't21.print2': 'Eleven cards · closest to the target wins',
+    't21.target': 'TARGET',
+    't21.needBet': 'Place a BET',
+    't21.dealerTrump': 'Dealer plays {name}',
+    't21.gain': 'New trump: {name}',
+    't21.dealerStands': 'Dealer stands',
+    't21.dealerHits': 'Dealer draws',
+    't21.hintHit': 'Odds favour another card: HIT',
+    't21.hintStand': 'Too risky: STAND',
+    't21.noFunds': 'Not enough chips for Stakes Up',
+    't21.bothBust': 'BOTH BUST',
+    't21.dealerCards': 'TRUMPS',
+    'tr.glimpse': 'Glimpse',
+    'tr.glimpse.d': "Reveal the dealer's hidden card",
+    'tr.precision': 'Precision',
+    'tr.precision.d': 'Draw the best card left in the deck',
+    'tr.call3': 'Call 3',
+    'tr.call3.d': 'Draw the 3, if it is still in the deck',
+    'tr.call5': 'Call 5',
+    'tr.call5.d': 'Draw the 5, if it is still in the deck',
+    'tr.call7': 'Call 7',
+    'tr.call7.d': 'Draw the 7, if it is still in the deck',
+    'tr.line17': 'Line 17',
+    'tr.line17.d': 'The target becomes 17 this round',
+    'tr.line24': 'Line 24',
+    'tr.line24.d': 'The target becomes 24 this round',
+    'tr.recall': 'Recall',
+    'tr.recall.d': 'Return your last card to the deck',
+    'tr.switch': 'Switch',
+    'tr.switch.d': "Swap your last card with the dealer's last card",
+    'tr.burn': 'Burn',
+    'tr.burn.d': "Send the dealer's last card back to the deck",
+    'tr.guard': 'Guard',
+    'tr.guard.d': 'If you lose this round, half your bet comes back',
+    'tr.stakes': 'Stakes Up',
+    'tr.stakes.d': 'Double your bet for this round',
+    'tr.feather': 'Feather',
+    'tr.feather.d': 'Draw the lowest card left in the deck',
+    'tr.call2': 'Call 2',
+    'tr.call2.d': 'Draw the 2, if it is still in the deck',
+    'tr.call4': 'Call 4',
+    'tr.call4.d': 'Draw the 4, if it is still in the deck',
+    'tr.call6': 'Call 6',
+    'tr.call6.d': 'Draw the 6, if it is still in the deck',
+    'tr.twin': 'Twin Draw',
+    'tr.twin.d': 'Draw two cards at once',
+    'tr.redraw': 'Redraw',
+    'tr.redraw.d': 'Draw a new card, then return your previous last card',
+    'tr.foresight': 'Foresight',
+    'tr.foresight.d': 'See the next card of the deck',
+    'tr.reshuffle': 'Reshuffle',
+    'tr.reshuffle.d': 'Shuffle the cards left in the deck',
+    'tr.line27': 'Line 27',
+    'tr.line27.d': 'The target becomes 27 this round',
+    'tr.reset21': 'Reset 21',
+    'tr.reset21.d': 'The target goes back to 21',
+    'tr.force': 'Force Draw',
+    'tr.force.d': 'Your opponent must take the top card',
+    'tr.freeze': 'Freeze',
+    'tr.freeze.d': 'Your opponent must stand on the next turn',
+    'tr.shatter': 'Shatter',
+    'tr.shatter.d': "Destroy one of your opponent's trumps",
+    'tr.pickpocket': 'Pickpocket',
+    'tr.pickpocket.d': "Steal one of the dealer's trumps",
+    'tr.blindfold': 'Blindfold',
+    'tr.blindfold.d': "The dealer can't play trumps this round",
+    'tr.fortress': 'Fortress',
+    'tr.fortress.d': 'If you lose this round, your whole bet comes back',
+    'tr.bounty': 'Bounty',
+    'tr.bounty.d': 'A win this round pays 2 to 1',
+    'rar.common': 'Common',
+    'rar.uncommon': 'Uncommon',
+    'rar.rare': 'Rare',
+    't21.codex': 'All trump cards',
+    't21.dealerOnly': 'dealer can use it too',
+    't21.next': 'Next card: {n}',
+    't21.shuffled': 'The deck was reshuffled',
+    't21.frozenYou': 'Frozen! You must stand this turn',
+    't21.frozenDealer': 'The dealer is frozen',
+    't21.lostTrump': 'The dealer destroyed your {name}',
+    't21.stole': 'You stole {name}',
+    't21.shattered': "Destroyed the dealer's {name}",
+    't21.rules': `
+      <p>An original duel version of blackjack. The deck has only <b>eleven cards, numbered 1 to 11</b> — one of each. You and the dealer each get two cards; the dealer's first card stays face down, and he can't see your first card either.</p>
+      <h4>Turns</h4>
+      <p>Take turns to <b>hit</b> or <b>stand</b>. The round ends when you stand and the dealer stands right after. Going over the target is a bust, but the round goes on — a trump may still save you.</p>
+      <h4>Winning</h4>
+      <p>Closest to the <b>target</b> (21 unless a trump changes it) without going over wins 1:1. If both bust, the lower total wins. <b>Ties go to you.</b></p>
+      <h4>Trump cards</h4>
+      <p>Each round you and the dealer get a trump card, and every card you draw has a chance to give you another (up to five, kept between rounds). Tap a trump to play it any time on your turn — there are 29 of them, common, uncommon and rare (gold border). The dealer plays trumps too!</p>`,
+  },
+  {
+    't21.stakes': 'DOBRO',
+    't21.print2': 'Onze cartas · vence quem chegar mais perto do alvo',
+    't21.target': 'ALVO',
+    't21.needBet': 'Faça uma APOSTA',
+    't21.dealerTrump': 'Dealer usa {name}',
+    't21.gain': 'Novo trunfo: {name}',
+    't21.dealerStands': 'Dealer para',
+    't21.dealerHits': 'Dealer compra',
+    't21.hintHit': 'As chances favorecem mais uma carta: PEDIR',
+    't21.hintStand': 'Arriscado demais: PARAR',
+    't21.noFunds': 'Fichas insuficientes para o Dobro',
+    't21.bothBust': 'OS DOIS ESTOURARAM',
+    't21.dealerCards': 'TRUNFOS',
+    'tr.glimpse': 'Espiar',
+    'tr.glimpse.d': 'Revela a carta escondida do dealer',
+    'tr.precision': 'Precisão',
+    'tr.precision.d': 'Compra a melhor carta que restou no baralho',
+    'tr.call3': 'Chamar 3',
+    'tr.call3.d': 'Compra o 3, se ainda estiver no baralho',
+    'tr.call5': 'Chamar 5',
+    'tr.call5.d': 'Compra o 5, se ainda estiver no baralho',
+    'tr.call7': 'Chamar 7',
+    'tr.call7.d': 'Compra o 7, se ainda estiver no baralho',
+    'tr.line17': 'Linha 17',
+    'tr.line17.d': 'O alvo vira 17 nesta rodada',
+    'tr.line24': 'Linha 24',
+    'tr.line24.d': 'O alvo vira 24 nesta rodada',
+    'tr.recall': 'Recolher',
+    'tr.recall.d': 'Devolve sua última carta ao baralho',
+    'tr.switch': 'Trocar',
+    'tr.switch.d': 'Troca sua última carta com a última do dealer',
+    'tr.burn': 'Queimar',
+    'tr.burn.d': 'Devolve a última carta do dealer ao baralho',
+    'tr.guard': 'Escudo',
+    'tr.guard.d': 'Se perder a rodada, metade da aposta volta',
+    'tr.stakes': 'Dobro',
+    'tr.stakes.d': 'Dobra sua aposta nesta rodada',
+    'tr.feather': 'Pluma',
+    'tr.feather.d': 'Compra a menor carta que restou no baralho',
+    'tr.call2': 'Chamar 2',
+    'tr.call2.d': 'Compra o 2, se ainda estiver no baralho',
+    'tr.call4': 'Chamar 4',
+    'tr.call4.d': 'Compra o 4, se ainda estiver no baralho',
+    'tr.call6': 'Chamar 6',
+    'tr.call6.d': 'Compra o 6, se ainda estiver no baralho',
+    'tr.twin': 'Compra Dupla',
+    'tr.twin.d': 'Compra duas cartas de uma vez',
+    'tr.redraw': 'Refazer',
+    'tr.redraw.d': 'Compra uma carta nova e devolve a sua última carta anterior',
+    'tr.foresight': 'Vidência',
+    'tr.foresight.d': 'Mostra a próxima carta do baralho',
+    'tr.reshuffle': 'Reembaralhar',
+    'tr.reshuffle.d': 'Embaralha as cartas que restam no baralho',
+    'tr.line27': 'Linha 27',
+    'tr.line27.d': 'O alvo vira 27 nesta rodada',
+    'tr.reset21': 'Volta 21',
+    'tr.reset21.d': 'O alvo volta para 21',
+    'tr.force': 'Compra Forçada',
+    'tr.force.d': 'O oponente é obrigado a pegar a carta do topo',
+    'tr.freeze': 'Congelar',
+    'tr.freeze.d': 'O oponente é obrigado a parar no próximo turno',
+    'tr.shatter': 'Estilhaçar',
+    'tr.shatter.d': 'Destrói um trunfo do oponente',
+    'tr.pickpocket': 'Batedor',
+    'tr.pickpocket.d': 'Rouba um trunfo do dealer',
+    'tr.blindfold': 'Venda',
+    'tr.blindfold.d': 'O dealer não pode usar trunfos nesta rodada',
+    'tr.fortress': 'Fortaleza',
+    'tr.fortress.d': 'Se perder a rodada, a aposta inteira volta',
+    'tr.bounty': 'Recompensa',
+    'tr.bounty.d': 'Uma vitória nesta rodada paga 2 para 1',
+    'rar.common': 'Comum',
+    'rar.uncommon': 'Incomum',
+    'rar.rare': 'Raro',
+    't21.codex': 'Todos os trunfos',
+    't21.dealerOnly': 'o dealer também usa',
+    't21.next': 'Próxima carta: {n}',
+    't21.shuffled': 'O baralho foi reembaralhado',
+    't21.frozenYou': 'Congelado! Você precisa parar neste turno',
+    't21.frozenDealer': 'O dealer está congelado',
+    't21.lostTrump': 'O dealer destruiu seu {name}',
+    't21.stole': 'Você roubou {name}',
+    't21.shattered': 'Destruiu o {name} do dealer',
+    't21.rules': `
+      <p>Uma versão original de blackjack em duelo. O baralho tem só <b>onze cartas, numeradas de 1 a 11</b> — uma de cada. Você e o dealer recebem duas cartas; a primeira do dealer fica virada, e ele também não vê a sua primeira.</p>
+      <h4>Turnos</h4>
+      <p>Revezem entre <b>pedir</b> e <b>parar</b>. A rodada acaba quando você para e o dealer para logo depois. Passar do alvo é estourar, mas a rodada continua — um trunfo ainda pode te salvar.</p>
+      <h4>Vitória</h4>
+      <p>Quem chegar mais perto do <b>alvo</b> (21, a não ser que um trunfo mude) sem passar ganha 1:1. Se os dois estourarem, vence o total menor. <b>Empate é seu.</b></p>
+      <h4>Cartas trunfo</h4>
+      <p>A cada rodada você e o dealer ganham um trunfo, e cada carta comprada pode dar outro (até cinco, guardados entre rodadas). Toque num trunfo para usá-lo no seu turno — são 29, entre comuns, incomuns e raros (borda dourada). O dealer também usa trunfos!</p>`,
+  },
+);
+
+const V = { dealer: 0.245, target: 0.372, player: 0.5 };
+const TRUMP_ICON: Record<TrumpId, { icon?: IconName; text?: string }> = {
+  glimpse: { icon: 'eye' },
+  precision: { icon: 'target' },
+  feather: { icon: 'feather' },
+  call2: { text: '2' },
+  call3: { text: '3' },
+  call4: { text: '4' },
+  call5: { text: '5' },
+  call6: { text: '6' },
+  call7: { text: '7' },
+  twin: { icon: 'twin' },
+  redraw: { icon: 'cycle' },
+  recall: { icon: 'redo' },
+  foresight: { icon: 'crystal' },
+  reshuffle: { icon: 'shuffle' },
+  line17: { text: '17' },
+  line24: { text: '24' },
+  line27: { text: '27' },
+  reset21: { text: '21' },
+  burn: { icon: 'flame' },
+  switch: { icon: 'swap' },
+  force: { icon: 'bolt' },
+  freeze: { icon: 'snow' },
+  shatter: { icon: 'crack' },
+  pickpocket: { icon: 'grab' },
+  blindfold: { icon: 'mask' },
+  guard: { icon: 'shield' },
+  fortress: { icon: 'castle' },
+  stakes: { icon: 'chips' },
+  bounty: { icon: 'crown' },
+};
+
+const trumpFace = (id: TrumpId) => {
+  const ic = TRUMP_ICON[id];
+  return ic.icon ? ICONS[ic.icon] : `<em>${ic.text}</em>`;
+};
+
+type TurnPick = 'hit' | 'stand' | { trump: TrumpId };
+
+export class Trump21View extends TableGame {
+  readonly id = 'trump21';
+  readonly title = 'Trump 21';
+  protected readonly felt = 'trump21' as const;
+  private duel = new Duel();
+  private c3 = new Map<number, Card3D>();
+  private targetPin: Pin | null = null;
+  private dealerPin: Pin | null = null;
+  private nextPin: Pin | null = null;
+  private bubbles: Record<Side, Pin | null> = { player: null, dealer: null };
+  private rowEl: HTMLElement | null = null;
+  private resolveTurn: ((p: TurnPick) => void) | null = null;
+  private myTurn = false;
+  private shown = new Set<number>();
+
+  constructor(g: GameCtx) {
+    super(g, 1);
+  }
+
+  rules() {
+    const rows = TRUMPS.map(
+      (tr) =>
+        `<div class="codex-row" data-rarity="${tr.rarity}"><span class="trump mini" data-rarity="${tr.rarity}"><span class="tr-ic">${trumpFace(tr.id)}</span></span>` +
+        `<span><b>${this.trumpName(tr.id)}</b> <i>${t(`rar.${tr.rarity}`)}${tr.dealer ? ` · ${t('t21.dealerOnly')}` : ''}</i><br>${t(`tr.${tr.id}.d`)}</span></div>`,
+    ).join('');
+    return `${t('t21.rules')}<h4>${t('t21.codex')}</h4><div class="codex">${rows}</div>`;
+  }
+
+  protected spotDefs(): SpotDef[] {
+    return [
+      { id: 'bet', label: t('t21.bet'), u: 0.33, v: 0.668, size: 0.6, max: 2500 },
+      { id: 'stakes', label: t('t21.stakes'), u: 0.67, v: 0.668, size: 0.6, auto: true },
+    ];
+  }
+
+  protected defaultBets() {
+    return { bet: 25 };
+  }
+
+  protected decorate() {
+    const { table, hud } = this.g;
+    table.addDecal(
+      tablePrint(
+        [
+          { text: t('t21.print1'), y: 76, R: 1400, font: FONT.title(62), spacing: 10, color: GOLD },
+          { text: t('t21.print2'), y: 130, R: 1400, font: FONT.italic(34), color: INK_SOFT },
+        ],
+        160,
+      ),
+      0.56,
+      0.372,
+      3.25,
+    );
+    this.targetPin = hud.pin('t21-target');
+    this.targetPin.el.innerHTML = `<small>${t('t21.target')}</small><b>21</b>`;
+    this.dealerPin = hud.pin('t21-dtrumps');
+    this.nextPin = hud.pin('t21-next');
+    this.bubbles.player = hud.pin('bubble');
+    this.bubbles.dealer = hud.pin('bubble');
+    this.rowEl = document.createElement('div');
+    this.rowEl.className = 'trumprow';
+    hud.root.appendChild(this.rowEl);
+    this.renderTrumps();
+  }
+
+  protected cleanup() {
+    this.targetPin?.remove();
+    this.dealerPin?.remove();
+    this.nextPin?.remove();
+    this.nextPin = null;
+    this.bubbles.player?.remove();
+    this.bubbles.dealer?.remove();
+    this.rowEl?.remove();
+    this.targetPin = this.dealerPin = this.rowEl = null;
+    this.bubbles = { player: null, dealer: null };
+    this.c3.clear();
+  }
+
+  protected validate() {
+    if ((this.spots.amounts().bet ?? 0) < 5) return t('t21.needBet');
+    return '';
+  }
+
+  protected advice() {
+    if (!this.myTurn) return null;
+    const a = this.duel.advice();
+    return { id: a, msg: a === 'hit' ? t('t21.hintHit') : t('t21.hintStand') };
+  }
+
+  // ---------------------------------------------------------------- HUD
+  private trumpName(id: TrumpId) {
+    return t(`tr.${id}`);
+  }
+
+  private renderTrumps() {
+    const el = this.rowEl;
+    if (!el) return;
+    const ids = this.duel.trumps.player;
+    el.replaceChildren(
+      ...ids.map((id, i) => {
+        const b = document.createElement('button');
+        b.className = 'trump live';
+        b.dataset.id = id;
+        b.dataset.rarity = rarityOf(id);
+        b.dataset.i = String(i);
+        b.innerHTML = `<span class="tr-ic">${trumpFace(id)}</span><span class="tr-name">${this.trumpName(id)}</span>`;
+        b.title = t(`tr.${id}.d`);
+        const usable = this.myTurn && this.duel.canUse('player', id) && (id !== 'stakes' || this.g.wallet.canAfford(this.spots.get('bet').amount));
+        b.disabled = !usable;
+        b.onclick = () => {
+          if (!usable || !this.resolveTurn) return;
+          this.g.sfx.click();
+          const r = this.resolveTurn;
+          this.resolveTurn = null;
+          // the card lifts off the hand before its effect plays
+          b.classList.add('used');
+          setTimeout(() => r({ trump: id }), 260);
+        };
+        return b;
+      }),
+    );
+    if (this.dealerPin) {
+      const n = this.duel.trumps.dealer.length;
+      this.dealerPin.el.innerHTML = n ? `<small>${t('t21.dealerCards')}</small><b>${'<i></i>'.repeat(n)}</b>` : '';
+      this.dealerPin.show(n > 0);
+    }
+  }
+
+  /** Shows the top card of the deck while the player knows it (Foresight). */
+  private updateNext() {
+    const p = this.nextPin;
+    if (!p) return;
+    const n = this.duel.nextCard;
+    if (n === null) {
+      p.show(false);
+      return;
+    }
+    p.el.innerHTML = `<small>${t('t21.next', { n: '' }).replace(/[:\s]+$/, '')}</small><img alt="${n}" src="${cardDataURL(100 + n, 90)}">`;
+    p.pop();
+    p.show(true);
+  }
+
+  private setTarget(n: number, pop = true) {
+    const b = this.targetPin?.el.querySelector('b');
+    if (!b) return;
+    b.textContent = String(n);
+    this.targetPin!.el.classList.toggle('changed', n !== 21);
+    if (pop) this.targetPin!.pop();
+  }
+
+  private updateBubbles() {
+    const d = this.duel;
+    const p = d.total('player');
+    const pb = this.bubbles.player;
+    if (pb) {
+      pb.set(`${p} / ${d.target}`, `bubble up${p > d.target ? ' bust' : p === d.target ? ' bj' : ''}`);
+      pb.show(d.player.length > 0);
+    }
+    const db = this.bubbles.dealer;
+    if (db) {
+      const hidden = d.dealer.length > 0 && !this.shown.has(d.dealer[0]);
+      const vis = d.dealer.slice(hidden ? 1 : 0).reduce((a, b) => a + b, 0);
+      const tot = d.total('dealer');
+      db.set(hidden ? `? + ${vis}` : `${tot} / ${d.target}`, `bubble down${!hidden && tot > d.target ? ' bust' : ''}`);
+      db.show(d.dealer.length > 0);
+    }
+  }
+
+  protected onSync() {
+    const { stage } = this.g;
+    const tmp = new THREE.Vector3();
+    const tp = stage.toScreen(stage.screenToTable(0.13, V.target));
+    this.targetPin?.place(tp.x, tp.y);
+    this.targetPin?.show(this.phase === 'playing');
+    const dp = stage.toScreen(stage.screenToTable(0.86, V.dealer - 0.085));
+    this.dealerPin?.place(dp.x, dp.y);
+    const np = stage.toScreen(stage.screenToTable(0.87, V.target));
+    this.nextPin?.place(np.x, np.y);
+    const pz = stage.screenToTable(0.5, V.player).z;
+    const dz = stage.screenToTable(0.5, V.dealer).z;
+    const a = stage.toScreen(tmp.set(0, 0, pz + CARD_H / 2 + 0.2));
+    this.bubbles.player?.place(a.x, a.y);
+    const b = stage.toScreen(tmp.set(0, 0, dz - CARD_H / 2 - 0.27));
+    this.bubbles.dealer?.place(b.x, b.y);
+    this.rowEl?.classList.toggle('hidden', this.phase !== 'playing');
+  }
+
+  // ---------------------------------------------------------------- 3D cards
+  private rowPlaces(side: Side) {
+    const vals = this.duel[side];
+    const z = this.g.stage.screenToTable(0.5, side === 'player' ? V.player : V.dealer).z;
+    const n = vals.length;
+    const gap = Math.min(0.62, 3.0 / Math.max(1, n));
+    return vals.map((v, i) => ({ v, pos: new THREE.Vector3((i - (n - 1) / 2) * gap, REST_Y + i * 0.004, z), yaw: (((v * 37) % 7) - 3) * 0.004 }));
+  }
+
+  private relayoutRow(side: Side, except?: number) {
+    return Promise.all(
+      this.rowPlaces(side)
+        .filter((p) => p.v !== except)
+        .map((p) => {
+          const c = this.c3.get(p.v);
+          return c ? slideCard(c, { pos: p.pos, yaw: p.yaw }, 0.3) : Promise.resolve();
+        }),
+    );
+  }
+
+  private async applyEvents(evs: DuelEvent[]) {
+    const { sfx, hud, cards, table, fx } = this.g;
+    for (const e of evs) {
+      switch (e.t) {
+        case 'draw': {
+          const c = cards.create(100 + e.value);
+          c.obj.visible = false;
+          this.c3.set(e.value, c);
+          this.cardsT.all.push(c);
+          const faceUp = e.side === 'player' || this.duel.dealer[0] !== e.value || this.duel.glimpsed;
+          if (faceUp) this.shown.add(e.value);
+          this.relayoutRow(e.side, e.value);
+          const pl = this.rowPlaces(e.side).find((p) => p.v === e.value)!;
+          sfx.play('slide', { vol: 0.8 });
+          await dealCard(c, table.shoeMouth(), table.shoeYaw, { pos: pl.pos, yaw: pl.yaw }, { faceUp, dur: 0.48, onLand: () => sfx.play('place', { vol: 0.5 }) });
+          this.updateBubbles();
+          break;
+        }
+        case 'back': {
+          const c = this.c3.get(e.value);
+          if (c) {
+            sfx.play('shove', { vol: 0.6 });
+            this.c3.delete(e.value);
+            this.cardsT.all.splice(this.cardsT.all.indexOf(c), 1);
+            await collectCards([c], table.shoeMouth(), table.shoeYaw, () => cards.destroy(c));
+            this.shown.delete(e.value);
+          }
+          await this.relayoutRow(e.side);
+          this.updateBubbles();
+          break;
+        }
+        case 'switch': {
+          sfx.play('fan', { vol: 0.6 });
+          await Promise.all([this.relayoutRow('player'), this.relayoutRow('dealer')]);
+          const a = this.c3.get(e.a);
+          const b = this.c3.get(e.b);
+          if (b && !b.faceUp) await flipCard(b, { dur: 0.4 });
+          if (a && !a.faceUp) await flipCard(a, { dur: 0.4 });
+          this.shown.add(e.a);
+          this.shown.add(e.b);
+          this.updateBubbles();
+          break;
+        }
+        case 'target': {
+          this.setTarget(e.n);
+          sfx.play('chips', { vol: 0.5 });
+          this.updateBubbles();
+          break;
+        }
+        case 'reveal': {
+          const c = this.c3.get(this.duel.dealer[0]);
+          if (c && !c.faceUp) {
+            sfx.play('fan', { vol: 0.5 });
+            await flipCard(c, { dur: 0.55 });
+          }
+          this.shown.add(this.duel.dealer[0]);
+          this.updateBubbles();
+          break;
+        }
+        case 'trump': {
+          if (e.side === 'dealer') {
+            sfx.play('chips', { vol: 0.6 });
+            await hud.banner(this.trumpName(e.id).toUpperCase(), t('t21.dealerTrump', { name: this.trumpName(e.id) }), 'small lose', 1100);
+          } else {
+            hud.toast(t(`tr.${e.id}.d`), 1600);
+            if (e.id === 'guard') {
+              const pz = this.g.stage.screenToTable(0.5, V.player).z;
+              fx.glow(new THREE.Vector3(0, 0, pz), 2.4, 1.6, 1.4, '#8fd0ff');
+            }
+          }
+          this.renderTrumps();
+          break;
+        }
+        case 'gain': {
+          this.renderTrumps();
+          if (e.side === 'player') {
+            if (rarityOf(e.id) === 'rare') this.g.sfx.win(false);
+            hud.toast(t('t21.gain', { name: this.trumpName(e.id) }), 1400);
+            const last = this.rowEl?.lastElementChild as HTMLElement | null;
+            last?.classList.add('fresh');
+          }
+          break;
+        }
+        case 'stand':
+          if (e.side === 'dealer') hud.toast(t('t21.dealerStands'), 900);
+          break;
+        case 'foresee':
+          sfx.play('fan', { vol: 0.5 });
+          hud.toast(t('t21.next', { n: e.value }), 2200);
+          this.updateNext();
+          break;
+        case 'shuffle':
+          sfx.play('shuffle', { vol: 0.6 });
+          hud.toast(t('t21.shuffled'), 1300);
+          this.updateNext();
+          break;
+        case 'freeze': {
+          sfx.play('chips', { vol: 0.5 });
+          hud.toast(e.side === 'player' ? t('t21.frozenYou') : t('t21.frozenDealer'), 1700);
+          const z = this.g.stage.screenToTable(0.5, e.side === 'player' ? V.player : V.dealer).z;
+          fx.glow(new THREE.Vector3(0, 0, z), 2.6, 1.5, 1.6, '#9fe3ff');
+          fx.burst(new THREE.Vector3(0, 0.25, z), 60, '#cfefff');
+          break;
+        }
+        case 'lose': {
+          this.renderTrumps();
+          if (e.side === 'player') hud.toast(t('t21.lostTrump', { name: this.trumpName(e.id) }), 1800);
+          else if (e.by === 'shatter') hud.toast(t('t21.shattered', { name: this.trumpName(e.id) }), 1600);
+          else hud.toast(t('t21.stole', { name: this.trumpName(e.id) }), 1600);
+          sfx.play('shove', { vol: 0.5 });
+          break;
+        }
+      }
+    }
+    this.updateNext();
+  }
+
+  // ---------------------------------------------------------------- round
+  private playerTurn(): Promise<TurnPick> {
+    return new Promise((res) => {
+      this.myTurn = true;
+      this.resolveTurn = res;
+      this.renderTrumps();
+      const done = (p: TurnPick) => {
+        if (!this.resolveTurn) return;
+        this.resolveTurn = null;
+        this.g.sfx.click();
+        res(p);
+      };
+      this.actions([
+        { id: 'stand', label: t('btn.stand'), color: 'red', icon: 'stand', onClick: () => done('stand') },
+        { id: 'hit', label: t('btn.hit'), color: 'green', icon: 'hit', enabled: this.duel.deck.length > 0 && !this.duel.frozen.player, onClick: () => done('hit') },
+      ]);
+    }).then((p) => {
+      this.myTurn = false;
+      this.g.hud.highlight(null);
+      this.actions(null);
+      this.renderTrumps();
+      return p as TurnPick;
+    });
+  }
+
+  protected async playRound() {
+    const { fx, sfx, hud } = this.g;
+    const d = this.duel;
+    this.c3.clear();
+    this.shown.clear();
+    this.setTarget(21, false);
+    await this.applyEvents(d.start());
+    this.updateBubbles();
+    let guard = 0;
+    while (!d.over && guard++ < 60) {
+      const pick = await this.playerTurn();
+      if (typeof pick === 'object') {
+        if (pick.trump === 'stakes') {
+          const bet = this.spots.get('bet').amount;
+          if (!this.g.wallet.canAfford(bet)) {
+            hud.toast(t('t21.noFunds'));
+            continue;
+          }
+          await this.applyEvents(d.useTrump('player', 'stakes'));
+          await this.place('stakes', bet);
+        } else await this.applyEvents(d.useTrump('player', pick.trump));
+        continue; // trumps don't end the turn
+      }
+      await this.applyEvents(pick === 'hit' ? d.hit('player') : d.stand('player'));
+      if (d.over) break;
+      await wait(0.45);
+      await this.applyEvents(d.dealerTurn());
+      this.updateBubbles();
+    }
+    // reveal and score
+    if (!this.shown.has(d.dealer[0])) await this.applyEvents([{ t: 'reveal' }]);
+    await wait(0.3);
+    const o = d.outcome();
+    const pz = this.g.stage.screenToTable(0.5, V.player).z;
+    if (o > 0) {
+      highlightCards(this.g, d.player.map((v) => this.c3.get(v)!).filter(Boolean));
+      fx.burst(new THREE.Vector3(0, 0.3, pz), d.total('player') === d.target ? 150 : 80);
+      if (d.total('player') === d.target) sfx.win(true);
+    } else if (o < 0) highlightCards(this.g, d.dealer.map((v) => this.c3.get(v)!).filter(Boolean), '#ff8f8f');
+    if (d.total('player') > d.target && d.total('dealer') > d.target) hud.toast(t('t21.bothBust'), 1400);
+    const big = o > 0 && d.total('player') === d.target ? `${d.target}!` : undefined;
+    const ret = { bet: d.payout(this.spots.get('bet').amount), stakes: d.payout(this.spots.get('stakes').amount) };
+    await this.settle(ret, { big });
+    // the duel deck is collected with the other cards by the table; the bubbles reset
+    this.bubbles.player?.show(false);
+    this.bubbles.dealer?.show(false);
+    gsap.delayedCall(0.01, () => this.renderTrumps());
+  }
+}
