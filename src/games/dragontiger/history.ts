@@ -1,17 +1,14 @@
 import type { Card } from '../../core/cards';
 import type { BetOutcome, MainResult } from './evaluate';
 import { ALL_BETS, MODE_ID, type BetId } from './ruleset';
+import type { KeyValueStore } from '../../core/storage';
+
+export { browserStore, MemoryStore, type KeyValueStore } from '../../core/storage';
 
 /**
  * Round history, statistics and the in-progress round, kept in the browser storage the casino
  * already uses for the wallet. Amounts are in cents.
  */
-export interface KeyValueStore {
-  getItem(k: string): string | null;
-  setItem(k: string, v: string): void;
-  removeItem(k: string): void;
-}
-
 const KEYS = { history: 'vlc.dt.history.v1', stats: 'vlc.dt.stats.v1', pending: 'vlc.dt.pending.v1' };
 const HISTORY_SIZE = 200;
 
@@ -86,31 +83,6 @@ export const emptyStats = (): DtStats => ({
   biggestBet: 0,
   winsByBet: Object.fromEntries(ALL_BETS.map((b) => [b, 0])) as Record<BetId, number>,
 });
-
-/** In-memory store (tests, or when the browser blocks storage). */
-export class MemoryStore implements KeyValueStore {
-  private m = new Map<string, string>();
-  getItem(k: string) {
-    return this.m.get(k) ?? null;
-  }
-  setItem(k: string, v: string) {
-    this.m.set(k, v);
-  }
-  removeItem(k: string) {
-    this.m.delete(k);
-  }
-}
-
-export function browserStore(): KeyValueStore {
-  try {
-    const t = '__vlc_dt__';
-    localStorage.setItem(t, '1');
-    localStorage.removeItem(t);
-    return localStorage;
-  } catch {
-    return new MemoryStore();
-  }
-}
 
 export class DtHistory {
   constructor(private store: KeyValueStore) {}

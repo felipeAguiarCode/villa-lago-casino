@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "sim:showdown": "vitest run --config vitest.sim.config.ts sim/showdown.sim.ts",
-    "sim:abyss": "vitest run --config vitest.sim.config.ts sim/abyss.sim.ts"
+    "sim:abyss": "vitest run --config vitest.sim.config.ts sim/abyss.sim.ts",
+    "sim:brazil": "vitest run --config vitest.sim.config.ts sim/brazil.sim.ts"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",

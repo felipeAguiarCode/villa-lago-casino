@@ -220,6 +220,23 @@ export abstract class TableGame implements GameView {
     await this.finishRound();
   }
 
+  /**
+   * Continues a round restored from storage (crash recovery): its bets were already taken from the
+   * wallet, so the chips are just put back on their circles before the round goes on.
+   */
+  protected async resumeRound(stakes: Record<string, number>, play: () => Promise<void>) {
+    if (this.phase !== 'betting' || this.busy) return;
+    this.busy = true;
+    this.phase = 'playing';
+    this.spots.betting = false;
+    this.paytable?.show(false);
+    this.g.hud.setBetBar(null);
+    this.spots.clearAll();
+    for (const [id, n] of Object.entries(stakes)) if (n > 0 && this.spots.spots.has(id)) this.spots.get(id).pile.set(n);
+    await play();
+    await this.finishRound();
+  }
+
   private async reshuffle() {
     await shuffleShow(this.g, { quick: true });
     this.shoe.shuffle();

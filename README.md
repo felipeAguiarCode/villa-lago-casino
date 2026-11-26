@@ -10,7 +10,7 @@
 
 ## Villa Lago Casino
 
-The game is set at the Villa Lago casino, whose symbol is **VL on a golden chip**. A portrait, mobile-first 3D card casino made with **three.js**: twenty-three games against the dealer, rich card animations, chips that fly and stack, and a big video-poker style HUD.
+The game is set at the Villa Lago casino, whose symbol is **VL on a golden chip**. A portrait, mobile-first 3D card casino made with **three.js**: twenty-eight games against the dealer, rich card animations, chips that fly and stack, and a big video-poker style HUD.
 
 > **Play chips only.** There is no real money, no real-money gambling and nothing to buy. Chips have no cash value. "Villa Lago" is an original name, not affiliated with any real casino.
 
@@ -26,6 +26,11 @@ The game is set at the Villa Lago casino, whose symbol is **VL on a golden chip*
 | Texas Hold'em Bonus | Flop 2×, turn and river bets, AA bonus up to 1000:1 |
 | Crazy 4 Poker | Super Bonus (four Aces 200:1), Queens Up, play 3× with Aces |
 | High Card Flush | Seven cards, longest flush wins, raise up to 3×, flush side bets |
+| Manilha Draw | 40-card Truco deck with a Vira and suit-ranked manilhas (Zap ♣ highest); Play or Fold, one free draw, then three duels against the dealer's fixed order |
+| Manilha Hold'em | Two hole cards, three board cards, best three with at least one hole card, compared card by card |
+| Pife Express | Six cards, up to two draws, sets and runs of three; most groups then least deadwood beats the dealer |
+| Video Pife | Nine cards, up to three draws, paid by groups: Perfect Pife (3) 7×, Double Set (2) 2× |
+| Canastra Draw | Two decks, nine cards, best single run with 2s as wild (one substitute per run); Clean Canastra 3:1, Dirty 2:1, runs 1:1 |
 | Dragon Tiger | Eight-deck shoe with a burn card, one card to Dragon and one to Tiger (Ace low, King high): Dragon / Tiger 1:1 with half back on ties, Tie 11:1, Suited Tie 50:1 and twelve side bets (Big, Small, Odd, Even, Red, Black on either card); exact payouts in cents, round history, statistics and recovery of interrupted rounds |
 | Abyss Poker | Heads-up Texas Hold'em against a dealer with five behaviour profiles (conservative, balanced, aggressive, calling station, unpredictable) that bets, raises, calls, folds and bluffs; 11 skills in four tiers bought with chips (reads on the dealer's cards, Pressure, Lock Raise, Block Bet, Reveal Card, Peek, Make 'Em Chase), priced from the matched pot |
 | Showdown Poker | Build a five-card hand one confirmed card at a time against a Monte Carlo dealer; Check / Double / Fold after cards 2 and 4, 1:1 on the total bet |
@@ -50,9 +55,10 @@ Every table opens with a cardistry show picked at random, never the same one twi
 npm install
 npm run dev          # http://127.0.0.1:5173
 npm run dev -- --host  # open from a phone on the same network
-npm run test         # 195 rule / payout / RTP tests
+npm run test         # 230 rule / payout / RTP tests
 npm run sim:showdown # Showdown Poker balance report → docs/showdown-balance.md
 npm run sim:abyss    # Abyss Poker balance report → docs/abyss-balance.md
+npm run sim:brazil   # Brazilian games balance report → docs/brazil-balance.md
 npm run build        # static site in dist/
 ```
 
@@ -69,4 +75,4 @@ Kenney *Casino Audio* (CC0), *Felt Backgrounds* by jbp4444 (CC0), English patter
 
 ### Português
 
-Cassino de cartas 3D para celular em pé, feito com three.js: 23 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Rode com `npm install` e `npm run dev`.
+Cassino de cartas 3D para celular em pé, feito com three.js: 28 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Rode com `npm install` e `npm run dev`.

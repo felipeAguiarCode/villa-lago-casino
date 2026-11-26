@@ -20,6 +20,9 @@ import { RussianView } from './games/russian/view';
 import { DoubleDrawView } from './games/doubledraw/view';
 import { AbyssView } from './games/abyss/view';
 import { DragonTigerView } from './games/dragontiger/view';
+import { ManilhaDrawView } from './games/brazil/view/manilhaDraw';
+import { ManilhaHoldemView } from './games/brazil/view/manilhaHoldem';
+import { CanastraDrawView, PifeExpressView, VideoPifeView } from './games/brazil/view/drawGames';
 import { setFavicon } from './ui/emblem';
 import { ShowdownView } from './games/showdown/view';
 import { Trump21View } from './games/trump21/view';
@@ -142,6 +145,11 @@ export class App {
     this.games.set('showdown', new ShowdownView(this.ctx));
     this.games.set('abyss', new AbyssView(this.ctx));
     this.games.set('dragontiger', new DragonTigerView(this.ctx));
+    this.games.set('manilhadraw', new ManilhaDrawView(this.ctx));
+    this.games.set('manilhaholdem', new ManilhaHoldemView(this.ctx));
+    this.games.set('pifeexpress', new PifeExpressView(this.ctx));
+    this.games.set('videopife', new VideoPifeView(this.ctx));
+    this.games.set('canastradraw', new CanastraDrawView(this.ctx));
     this.games.set('trump21', new Trump21View(this.ctx));
 
     this.lobby = new Lobby(
