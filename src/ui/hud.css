@@ -669,6 +669,13 @@ button {
   pointer-events: none;
 }
 
+/* a hidden bar's buttons must not catch taps meant for the bar shown in its place
+   (#hud .live would otherwise switch their pointer events back on) */
+#hud .actions.hidden .live,
+#hud .betbar.hidden .live {
+  pointer-events: none;
+}
+
 /* ---------------------------------------------------------------- betting bar */
 .betbar {
   position: absolute;
