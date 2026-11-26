@@ -4,7 +4,7 @@ import { Shoe } from '../../core/cards';
 import { money } from '../../core/wallet';
 import { t } from '../../core/i18n';
 import { shuffleShow } from '../../table/shuffle';
-import { arcTo, collectCards, dealCard, flipCard, peekCard, shake, slideCard, wait, type Place } from '../../table/anim';
+import { collectCards, dealCard, flipCard, peekCard, shake, slideCard, wait, type Place, slideChips } from '../../table/anim';
 import { CARD_H, REST_Y, type Card3D } from '../../table/cardMesh';
 import { ChipPile, CHIP_R } from '../../table/chips';
 import { betRing, blackjackPrint } from '../../table/prints';
@@ -274,7 +274,7 @@ export class BlackjackView implements GameView {
     const bottom = stage.screenToTable(0.5, 1.15);
     const home = pile.group.position.clone();
     this.busy = true;
-    arcTo(pile.group, new THREE.Vector3(home.x, 0, bottom.z), 0.3, 0.1, 'power2.in').then(() => {
+    slideChips(pile.group, new THREE.Vector3(home.x, 0, bottom.z), 0.3, 0.1, 'power2.in').then(() => {
       pile.clear();
       pile.group.position.copy(home);
       this.busy = false;
@@ -488,7 +488,7 @@ export class BlackjackView implements GameView {
         this.hands.forEach((hv, i) => {
           hv.cx = centers[i];
           jobs.push(this.relayoutHand(hv, false, 0.38));
-          if (hv !== nh) jobs.push(arcTo(hv.pile.group, new THREE.Vector3(hv.cx, 0, this.a.bet.z), 0.38, 0.05));
+          if (hv !== nh) jobs.push(slideChips(hv.pile.group, new THREE.Vector3(hv.cx, 0, this.a.bet.z), 0.38, 0.05));
         });
         nh.pile.group.position.set(nh.cx, 0, this.a.bet.z);
         const from3 = stage.screenToTable(0.5, 0.95, 1.6);
@@ -576,14 +576,14 @@ export class BlackjackView implements GameView {
     const pile = new ChipPile(chips, stage.table, new THREE.Vector3(hv.cx + 0.48, 0, top.z));
     pile.set(amount);
     this.payoutPiles.push(pile);
-    return arcTo(pile.group, new THREE.Vector3(hv.cx + 0.48, 0, z), 0.55, 0.15, 'power3.out').then(() => sfx.play('stack', { vol: 0.7 }));
+    return slideChips(pile.group, new THREE.Vector3(hv.cx + 0.48, 0, z), 0.55, 0.15, 'power3.out').then(() => sfx.play('stack', { vol: 0.7 }));
   }
 
   private lose(pile: ChipPile) {
     const { stage, sfx } = this.g;
     const top = stage.screenToTable(0.5, -0.1);
     sfx.play('handle', { vol: 0.5 });
-    return arcTo(pile.group, new THREE.Vector3(pile.group.position.x * 0.3, 0, top.z), 0.6, 0.12, 'power2.in').then(() => pile.clear());
+    return slideChips(pile.group, new THREE.Vector3(pile.group.position.x * 0.3, 0, top.z), 0.6, 0.12, 'power2.in').then(() => pile.clear());
   }
 
   private async settle(e: SettleEvent) {
@@ -622,7 +622,7 @@ export class BlackjackView implements GameView {
         const p = new ChipPile(this.g.chips, this.g.stage.table, new THREE.Vector3(0.5, 0, top.z));
         p.set(e.insuranceRet - this.insAmount);
         this.payoutPiles.push(p, ip);
-        jobs.push(arcTo(p.group, new THREE.Vector3(0.5, 0, this.a.ins.z), 0.55, 0.15, 'power3.out'));
+        jobs.push(slideChips(p.group, new THREE.Vector3(0.5, 0, this.a.ins.z), 0.55, 0.15, 'power3.out'));
       } else jobs.push(this.lose(ip).then(() => ip.dispose()));
       this.insPile = null;
     }
@@ -663,7 +663,7 @@ export class BlackjackView implements GameView {
     const bottom = stage.screenToTable(0.5, 1.2);
     const toPlayer = [...this.hands.map((h) => h.pile).filter((p) => p.amount > 0), ...this.payoutPiles];
     if (toPlayer.length) sfx.play('handle', { vol: 0.6 });
-    await Promise.all(toPlayer.map((p) => arcTo(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
+    await Promise.all(toPlayer.map((p) => slideChips(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
     for (const p of this.payoutPiles) p.dispose();
     this.payoutPiles = [];
     const all = [...this.dealer, ...this.hands.flatMap((h) => h.cards)];

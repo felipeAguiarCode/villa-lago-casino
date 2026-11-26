@@ -19,6 +19,7 @@ export const FELTS = {
   holdem3: '#5a1f3e',
   russian: '#7a1e1e',
   doubledraw: '#1f3f78',
+  showdown: '#0f5f45',
   trump21: '#26202e',
   thb: '#0f5a52',
   crazy4: '#7a3a12',

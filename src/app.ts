@@ -18,6 +18,7 @@ import { FourCardView } from './games/fourcard/view';
 import { Holdem3View } from './games/holdem3/view';
 import { RussianView } from './games/russian/view';
 import { DoubleDrawView } from './games/doubledraw/view';
+import { ShowdownView } from './games/showdown/view';
 import { Trump21View } from './games/trump21/view';
 import { ThbView } from './games/thb/view';
 import { Crazy4View } from './games/crazy4/view';
@@ -135,6 +136,7 @@ export class App {
     this.games.set('holdem3', new Holdem3View(this.ctx));
     this.games.set('russian', new RussianView(this.ctx));
     this.games.set('doubledraw', new DoubleDrawView(this.ctx));
+    this.games.set('showdown', new ShowdownView(this.ctx));
     this.games.set('trump21', new Trump21View(this.ctx));
 
     this.lobby = new Lobby(

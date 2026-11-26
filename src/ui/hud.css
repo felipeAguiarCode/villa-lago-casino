@@ -2415,34 +2415,101 @@ input[type='range'] {
   top: calc(max(calc(3 * var(--u)), env(safe-area-inset-top)) + calc(27.5 * var(--u)));
 }
 
-/* ---------------------------------------------------------------- themed scrollbars (gold on lacquer) */
+/* ---------------------------------------------------------------- scrollbars: gilded rail, jewel thumb, finials */
 ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 14px;
+  height: 14px;
 }
 
+/* the track is an engraved gold rail with diamond beads */
 ::-webkit-scrollbar-track {
-  margin: 10px 0;
-  border-radius: 9px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(30, 22, 10, 0.55), rgba(0, 0, 0, 0.55));
-  box-shadow: inset 0 0 0 1px rgba(214, 180, 106, 0.25);
+  border-radius: 7px;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='24'><path d='M7 9.6 9.2 12 7 14.4 4.8 12z' fill='%23e6c27a' fill-opacity='.7' stroke='%233a2405' stroke-width='.5'/></svg>") center top / 14px 24px repeat-y,
+    linear-gradient(90deg, transparent 5.5px, #4a2f08 5.5px, #c9952a 6.2px, #fff1c4 7px, #c9952a 7.8px, #4a2f08 8.5px, transparent 8.5px) center / 14px 100% no-repeat,
+    linear-gradient(90deg, transparent 2px, rgba(0, 0, 0, 0.42) 4px, rgba(0, 0, 0, 0.42) 10px, transparent 12px);
 }
 
-::-webkit-scrollbar-thumb {
-  border-radius: 9px;
+::-webkit-scrollbar-track:horizontal {
   background:
-    repeating-linear-gradient(0deg, transparent 0 6px, rgba(0, 0, 0, 0.18) 6px 7px),
-    linear-gradient(90deg, #8a6420 0%, #f3d991 45%, #fff1c4 55%, #c9952a 100%);
-  border: 1px solid rgba(40, 26, 6, 0.85);
-  box-shadow: 0 0 6px rgba(255, 210, 100, 0.35);
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='14'><path d='M9.6 7 12 4.8 14.4 7 12 9.2z' fill='%23e6c27a' fill-opacity='.7' stroke='%233a2405' stroke-width='.5'/></svg>") left center / 24px 14px repeat-x,
+    linear-gradient(0deg, transparent 5.5px, #4a2f08 5.5px, #c9952a 6.2px, #fff1c4 7px, #c9952a 7.8px, #4a2f08 8.5px, transparent 8.5px) center / 100% 14px no-repeat,
+    linear-gradient(0deg, transparent 2px, rgba(0, 0, 0, 0.42) 4px, rgba(0, 0, 0, 0.42) 10px, transparent 12px);
+}
+
+/* the thumb is a polished gold bar with bevelled ends and a jewel in the middle */
+::-webkit-scrollbar-thumb {
+  min-height: 46px;
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 20'><path d='M4 1 7.2 10 4 19 .8 10z' fill='none' stroke='%234a2f08' stroke-width='.9'/><path d='M4 6 5.5 10 4 14 2.5 10z' fill='%234a2f08'/><path d='M4 1.8v2.4M4 15.8v2.4' stroke='%23fff6d8' stroke-opacity='.7' stroke-width='.6'/></svg>") center / 8px 20px no-repeat padding-box,
+    linear-gradient(180deg, rgba(255, 246, 216, 0.55), transparent 9px, transparent calc(100% - 9px), rgba(58, 36, 5, 0.5)) padding-box,
+    linear-gradient(90deg, #5e3f0e 0%, #b98326 16%, #f3d991 38%, #fff6dc 50%, #e8c56f 62%, #a97520 84%, #5e3f0e 100%) padding-box;
+  box-shadow:
+    inset 0 0 0 1px rgba(58, 36, 5, 0.95),
+    inset 0 0 0 2px rgba(255, 236, 180, 0.35),
+    0 0 7px rgba(255, 205, 100, 0.4);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  min-width: 46px;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 8'><path d='M1 4 10 .8 19 4 10 7.2z' fill='none' stroke='%234a2f08' stroke-width='.9'/><path d='M6 4 10 2.5 14 4 10 5.5z' fill='%234a2f08'/><path d='M1.8 4h2.4M15.8 4h2.4' stroke='%23fff6d8' stroke-opacity='.7' stroke-width='.6'/></svg>") center / 20px 8px no-repeat padding-box,
+    linear-gradient(90deg, rgba(255, 246, 216, 0.55), transparent 9px, transparent calc(100% - 9px), rgba(58, 36, 5, 0.5)) padding-box,
+    linear-gradient(0deg, #5e3f0e 0%, #b98326 16%, #f3d991 38%, #fff6dc 50%, #e8c56f 62%, #a97520 84%, #5e3f0e 100%) padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, #a8792b 0%, #ffe9a6 50%, #d8a43a 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(58, 36, 5, 0.95),
+    inset 0 0 0 2px rgba(255, 244, 210, 0.6),
+    0 0 11px rgba(255, 215, 120, 0.7);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(90deg, #c9952a, #fff6dc, #e6c27a);
+  filter: brightness(1.12) saturate(1.1);
+}
+
+/* finials at both ends of the rail */
+::-webkit-scrollbar-button:single-button {
+  display: block;
+  width: 14px;
+  height: 16px;
+  background: transparent center / 12px 14px no-repeat;
+}
+
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%237a5518'/><stop offset='.5' stop-color='%23fff1c4'/><stop offset='1' stop-color='%23b8862a'/></linearGradient></defs><g transform='rotate(0 6 7)'><path d='M6 1.2 8.8 5.2 6 7.8 3.2 5.2z' fill='url(%23g)' stroke='%233a2405' stroke-width='.6'/><path d='M6 7.8v4.6M2 9.6c1.6.2 2.8 1.1 4 2.8 1.2-1.7 2.4-2.6 4-2.8' fill='none' stroke='url(%23g)' stroke-width='1.15' stroke-linecap='round'/></g></svg>");
+}
+
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%237a5518'/><stop offset='.5' stop-color='%23fff1c4'/><stop offset='1' stop-color='%23b8862a'/></linearGradient></defs><g transform='rotate(180 6 7)'><path d='M6 1.2 8.8 5.2 6 7.8 3.2 5.2z' fill='url(%23g)' stroke='%233a2405' stroke-width='.6'/><path d='M6 7.8v4.6M2 9.6c1.6.2 2.8 1.1 4 2.8 1.2-1.7 2.4-2.6 4-2.8' fill='none' stroke='url(%23g)' stroke-width='1.15' stroke-linecap='round'/></g></svg>");
+}
+
+::-webkit-scrollbar-button:single-button:horizontal {
+  width: 16px;
+  height: 14px;
+  background-size: 14px 12px;
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%237a5518'/><stop offset='.5' stop-color='%23fff1c4'/><stop offset='1' stop-color='%23b8862a'/></linearGradient></defs><g transform='rotate(-90 6 7)'><path d='M6 1.2 8.8 5.2 6 7.8 3.2 5.2z' fill='url(%23g)' stroke='%233a2405' stroke-width='.6'/><path d='M6 7.8v4.6M2 9.6c1.6.2 2.8 1.1 4 2.8 1.2-1.7 2.4-2.6 4-2.8' fill='none' stroke='url(%23g)' stroke-width='1.15' stroke-linecap='round'/></g></svg>");
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%237a5518'/><stop offset='.5' stop-color='%23fff1c4'/><stop offset='1' stop-color='%23b8862a'/></linearGradient></defs><g transform='rotate(90 6 7)'><path d='M6 1.2 8.8 5.2 6 7.8 3.2 5.2z' fill='url(%23g)' stroke='%233a2405' stroke-width='.6'/><path d='M6 7.8v4.6M2 9.6c1.6.2 2.8 1.1 4 2.8 1.2-1.7 2.4-2.6 4-2.8' fill='none' stroke='url(%23g)' stroke-width='1.15' stroke-linecap='round'/></g></svg>");
+}
+
+::-webkit-scrollbar-button:hover {
+  filter: brightness(1.25) drop-shadow(0 0 3px rgba(255, 210, 110, 0.8));
+}
+
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal:start:increment,
+::-webkit-scrollbar-button:horizontal:end:decrement {
+  display: none;
 }
 
 ::-webkit-scrollbar-corner {
@@ -2452,7 +2519,7 @@ input[type='range'] {
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: #d6b46a rgba(0, 0, 0, 0.45);
+    scrollbar-color: #e6c27a rgba(20, 14, 4, 0.6);
   }
 }
 

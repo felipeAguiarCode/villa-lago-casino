@@ -8,6 +8,7 @@ export const GAMES: GameInfo[] = [
   { id: 'threecard', title: 'Three Card Poker', tagline: 'game.threecard.tag', felt: ['#1a7d88', '#073238'], art: ['Qs', 'Ks', 'As'], ready: true },
   { id: 'tcpfaceup', title: 'Face Up Three Card', tagline: 'game.tcpfaceup.tag', felt: ['#1a7d88', '#073238'], art: ['Kh', 'Kd', '5c'], ready: true },
   { id: 'slot3', title: 'Three Card Slots', tagline: 'game.slot3.tag', felt: ['#a3254f', '#3a0716'], art: ['As', 'Ks', 'Qs'], ready: true },
+  { id: 'showdown', title: 'Showdown Poker', tagline: 'game.showdown.tag', felt: ['#1b8a66', '#06291e'], art: ['Js', 'Qs', 'Ks', 'As'], ready: true },
   { id: 'fourcard', title: 'Four Card Poker', tagline: 'game.fourcard.tag', felt: ['#2a8a70', '#0a2e25'], art: ['9h', '9s', '9d', '9c'], ready: true },
   { id: 'crazy4', title: 'Crazy 4 Poker', tagline: 'game.crazy4.tag', felt: ['#b55a1e', '#3f1704'], art: ['Ac', 'Ad', 'Ah', 'As'], ready: true },
   { id: 'holdem3', title: "3 Card Hold'em", tagline: 'game.holdem3.tag', felt: ['#8a3466', '#2c0a1d'], art: ['Ah', 'Kh', 'Qh'], ready: true },

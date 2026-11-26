@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { addStrings, t } from '../../core/i18n';
 import { Shoe } from '../../core/cards';
 import { money } from '../../core/wallet';
-import { arcTo, dealCard, flipCard, peekCard, shake, slideCard, wait } from '../../table/anim';
+import { dealCard, flipCard, peekCard, shake, slideCard, wait, slideChips } from '../../table/anim';
 import { CARD_H, REST_Y, type Card3D } from '../../table/cardMesh';
 import { ChipPile } from '../../table/chips';
 import { betRing, FONT, GOLD, INK_SOFT, tablePrint } from '../../table/prints';
@@ -589,7 +589,7 @@ export class VideoBlackjackView implements GameView {
       } else if (sRet === 0) {
         sfx.play('handle', { vol: 0.4 });
         const home = sv.pile.group.position.clone();
-        await arcTo(sv.pile.group, new THREE.Vector3(dealerSide.x, 0, dealerSide.z - 1.2), 0.4, 0.15, 'power2.in');
+        await slideChips(sv.pile.group, new THREE.Vector3(dealerSide.x, 0, dealerSide.z - 1.2), 0.4, 0.15, 'power2.in');
         sv.pile.clear();
         sv.pile.group.position.copy(home);
       } else if (sRet < sBet) sv.pile.set(sRet);
@@ -614,7 +614,7 @@ export class VideoBlackjackView implements GameView {
     const bottom = this.at(0.5, 1.2);
     const piles = this.seats.map((s) => s.pile).filter((p) => p.amount > 0);
     if (piles.length) sfx.play('handle', { vol: 0.6 });
-    await Promise.all(piles.map((p) => arcTo(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
+    await Promise.all(piles.map((p) => slideChips(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
     await finishXP(this.g, wager, net, banner);
   }
 

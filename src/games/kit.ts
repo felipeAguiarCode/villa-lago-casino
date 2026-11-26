@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { t } from '../core/i18n';
 import { money } from '../core/wallet';
 import type { Card } from '../core/cards';
-import { arcTo, collectCards, dealCard, flipCard, wait, type Place } from '../table/anim';
+import { arcTo, collectCards, dealCard, flipCard, wait, type Place, slideChips } from '../table/anim';
 import { CARD_H, CARD_W, REST_Y, type Card3D } from '../table/cardMesh';
 import { ChipPile, CHIP_R } from '../table/chips';
 import { betRing } from '../table/prints';
@@ -179,7 +179,7 @@ export class BetSpots {
     const p = new ChipPile(chips, stage.table, new THREE.Vector3(s.pos.x + dx, 0, top.z));
     p.set(win);
     s.payouts.push(p);
-    return arcTo(p.group, new THREE.Vector3(s.pos.x + dx, 0, s.pos.z), 0.55, 0.15, 'power3.out').then(() => sfx.play('stack', { vol: 0.7 }));
+    return slideChips(p.group, new THREE.Vector3(s.pos.x + dx, 0, s.pos.z), 0.55, 0.15, 'power3.out').then(() => sfx.play('stack', { vol: 0.7 }));
   }
 
   /** The dealer takes the chips of a losing spot. */
@@ -189,7 +189,7 @@ export class BetSpots {
     const top = this.g.stage.screenToTable(0.5, -0.1);
     this.g.sfx.play('handle', { vol: 0.5 });
     const home = s.pile.group.position.clone();
-    return arcTo(s.pile.group, new THREE.Vector3(s.pos.x * 0.3, 0, top.z), 0.6, 0.12, 'power2.in').then(() => {
+    return slideChips(s.pile.group, new THREE.Vector3(s.pos.x * 0.3, 0, top.z), 0.6, 0.12, 'power2.in').then(() => {
       s.pile.clear();
       s.pile.group.position.copy(home);
     });
@@ -203,7 +203,7 @@ export class BetSpots {
     const bottom = this.g.stage.screenToTable(0.5, 1.2);
     this.g.sfx.play('handle', { vol: 0.6 });
     const home = s.pile.group.position.clone();
-    await arcTo(s.pile.group, new THREE.Vector3(s.pos.x, 0, bottom.z), 0.45, 0.1, 'power2.in');
+    await slideChips(s.pile.group, new THREE.Vector3(s.pos.x, 0, bottom.z), 0.45, 0.1, 'power2.in');
     s.pile.clear();
     s.pile.group.position.copy(home);
     this.g.wallet.credit(amt);
@@ -220,7 +220,7 @@ export class BetSpots {
     }
     if (piles.length) this.g.sfx.play('handle', { vol: 0.6 });
     const homes = piles.map((p) => p.group.position.clone());
-    await Promise.all(piles.map((p) => arcTo(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
+    await Promise.all(piles.map((p) => slideChips(p.group, new THREE.Vector3(p.group.position.x, 0, bottom.z), 0.5, 0.08, 'power2.in')));
     piles.forEach((p, i) => {
       p.clear();
       p.group.position.copy(homes[i]);
@@ -270,8 +270,8 @@ export class CardTable {
   readonly all: Card3D[] = [];
   constructor(private g: GameCtx) {}
 
-  /** Deals one card from the shoe (or from `from`) to a place. */
-  async deal(card: Card, to: Place, faceUp: boolean, o: { from?: THREE.Vector3; fromYaw?: number; dur?: number } = {}): Promise<Card3D> {
+  /** Deals one card from the shoe (or from `from`) to a place. `null` deals a card whose face is not known yet. */
+  async deal(card: Card | null, to: Place, faceUp: boolean, o: { from?: THREE.Vector3; fromYaw?: number; dur?: number } = {}): Promise<Card3D> {
     const { cards, table, sfx } = this.g;
     const c = cards.create(card);
     c.obj.visible = false;
@@ -318,7 +318,7 @@ export function row(cx: number, cz: number, n: number, gap: number, overlapY = 0
 export function highlightCards(g: GameCtx, cards: Card3D[], color = '#ffd27a') {
   for (const c of cards) {
     g.fx.glow(new THREE.Vector3(c.obj.position.x, 0, c.obj.position.z), 0.9, 1.15, 1.6, color);
-    arcTo(c.obj, c.obj.position.clone().setY(c.obj.position.y + 0.04), 0.25, 0, 'power2.out');
+    arcTo(c.obj, c.obj.position.clone().setY(c.obj.position.y + 0.04), 0.4, 0, 'back.out(2.2)');
   }
 }
 
@@ -426,7 +426,7 @@ export class CardPicker {
     const c = this.cards[i];
     if (!c) return;
     const z = c.obj.userData.baseZ ?? (c.obj.userData.baseZ = c.obj.position.z);
-    arcTo(c.obj, new THREE.Vector3(c.obj.position.x, up ? REST_Y + 0.05 : REST_Y + 0.004 * i, up ? z - 0.24 : z), 0.16, 0.02, 'power2.out');
+    arcTo(c.obj, new THREE.Vector3(c.obj.position.x, up ? REST_Y + 0.05 : REST_Y + 0.004 * i, up ? z - 0.24 : z), 0.26, 0.015, up ? 'back.out(2.4)' : 'back.out(1.6)');
   }
 
   detach() {

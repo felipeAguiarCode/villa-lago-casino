@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { addStrings, t } from '../../core/i18n';
 import { Shoe, type Card } from '../../core/cards';
 import { money } from '../../core/wallet';
-import { arcTo } from '../../table/anim';
+import { slideChips } from '../../table/anim';
 import { cardDataURL } from '../../table/cardFaces';
 import { ChipPile } from '../../table/chips';
 import { betRing } from '../../table/prints';
@@ -270,7 +270,7 @@ export class Slot3View implements GameView {
     const pile = this.pile!;
     const to = won > 0 ? stage.screenToTable(0.5, 1.2) : stage.screenToTable(0.5, -0.1);
     sfx.play('handle', { vol: 0.5 });
-    await arcTo(pile.group, new THREE.Vector3(this.pileHome.x, 0, to.z), 0.5, 0.1, 'power2.in');
+    await slideChips(pile.group, new THREE.Vector3(this.pileHome.x, 0, to.z), 0.5, 0.1, 'power2.in');
     pile.clear();
     pile.group.position.copy(this.pileHome);
     await finishXP(this.g, cost, won - cost, banner);

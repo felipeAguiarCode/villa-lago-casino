@@ -218,8 +218,9 @@ export class ChipPile {
   static landSound: ((n: number) => void) | null = null;
 
   /**
-   * Places a chip from a world position onto the pile: it flies in spinning, lands just above the
-   * stack, clacks (stacking sound), bounces and wobbles until it settles.
+   * Places a chip from a world position onto the pile. It flies on a ballistic arc, tumbling end
+   * over end while its spin decays, hits the stack (stacking sound), makes two shrinking hops
+   * (restitution), skids into line with the stack and wobbles flat like a settling coin.
    */
   async throwChip(v: number, fromWorld: THREE.Vector3, onLand?: () => void, delay = 0) {
     const m = this.push(v);
@@ -228,41 +229,57 @@ export class ChipPile {
     const from = this.group.worldToLocal(fromWorld.clone());
     m.position.copy(from);
     m.visible = delay === 0;
-    const tilt = 0.75 + Math.random() * 0.35;
+    const dist = Math.hypot(target.x - from.x, target.z - from.z);
+    const apex = 0.16 + Math.min(0.3, dist * 0.07);
+    const flight = Math.min(0.46, 0.28 + dist * 0.035);
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const tumble = side * (0.8 + Math.random() * 0.5);
     const spin0 = m.rotation.y;
-    const spin = (Math.random() < 0.5 ? -1 : 1) * (2.2 + Math.random() * 1.6);
-    m.rotation.x = tilt;
+    const spin = (Math.random() < 0.5 ? -1 : 1) * (2.4 + Math.random() * 1.8);
+    const skid = new THREE.Vector3((Math.random() - 0.5) * 0.05, 0, (Math.random() - 0.5) * 0.05);
+    const landAt = target.clone().add(skid);
     const p = { t: 0 };
     await gsap.to(p, {
       t: 1,
-      duration: 0.34,
+      duration: flight,
       delay,
-      ease: 'power2.out',
+      ease: 'none',
       onStart: () => (m.visible = true),
       onUpdate: () => {
-        m.position.lerpVectors(from, target, p.t);
-        m.position.y += Math.sin(p.t * Math.PI) * 0.34 + (1 - p.t) * 0.02 + 0.028 * p.t;
-        m.rotation.x = tilt * (1 - p.t);
-        m.rotation.y = spin0 + spin * (1 - p.t);
+        const t = p.t;
+        // air drag slows the chip a little on its way down
+        const s = t * (1.3 - 0.3 * t);
+        m.position.lerpVectors(from, landAt, s);
+        m.position.y = from.y + (target.y - from.y) * t + 4 * apex * t * (1 - t);
+        m.rotation.x = tumble * Math.pow(1 - t, 1.4);
+        m.rotation.y = spin0 + spin * (1 - (1 - t) * (1 - t));
       },
     });
-    // contact: clack, short bounce and a decaying wobble
     ChipPile.landSound?.(idx);
     onLand?.();
     const q = { t: 0 };
-    const wob = (Math.random() < 0.5 ? -1 : 1) * 0.16;
+    const A0 = 0.11 + Math.random() * 0.05;
+    const phase = Math.random() * Math.PI * 2;
     await gsap.to(q, {
       t: 1,
-      duration: 0.3,
+      duration: 0.46,
       ease: 'none',
       onUpdate: () => {
-        const t = q.t;
-        m.position.y = target.y + 0.028 * Math.abs(Math.cos(t * Math.PI * 1.5)) * (1 - t) * (1 - t);
-        m.rotation.z = wob * Math.sin(t * Math.PI * 5) * (1 - t);
-        m.scale.set(1 + 0.05 * Math.sin(t * Math.PI) * (1 - t), 1 - 0.12 * Math.sin(t * Math.PI * 2) * (1 - t), 1 + 0.05 * Math.sin(t * Math.PI) * (1 - t));
+        const u = q.t;
+        // two hops that lose most of their energy
+        const hop = u < 0.26 ? 0.024 * Math.sin((Math.PI * u) / 0.26) : u < 0.4 ? 0.006 * Math.sin((Math.PI * (u - 0.26)) / 0.14) : 0;
+        m.position.set(target.x + skid.x * Math.exp(-7 * u), target.y + hop, target.z + skid.z * Math.exp(-7 * u));
+        // coin-like wobble: the tilt precesses faster as it dies out
+        const amp = A0 * Math.exp(-5.2 * u);
+        const ang = phase + Math.PI * 2 * (2 * u + 2.2 * u * u);
+        m.rotation.x = amp * Math.cos(ang);
+        m.rotation.z = amp * Math.sin(ang);
+        const squash = 0.1 * Math.exp(-16 * u) * Math.sin(Math.PI * Math.min(1, u * 6));
+        m.scale.set(1 + squash * 0.4, 1 - squash, 1 + squash * 0.4);
       },
     });
-    m.position.y = target.y;
+    m.position.copy(target);
+    m.rotation.x = 0;
     m.rotation.z = 0;
     m.scale.set(1, 1, 1);
     if (this.values.length > 12) this.set(this.amount);

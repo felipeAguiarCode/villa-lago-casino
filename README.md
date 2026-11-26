@@ -1,6 +1,6 @@
 # Villa Lago Casino
 
-A portrait, mobile-first 3D card casino made with **three.js**: twenty games against the dealer, rich card animations, chips that fly and stack, and a big video-poker style HUD.
+A portrait, mobile-first 3D card casino made with **three.js**: twenty-one games against the dealer, rich card animations, chips that fly and stack, and a big video-poker style HUD.
 
 > **Play chips only.** There is no real money, no real-money gambling and nothing to buy. Chips have no cash value. "Villa Lago" is an original name, not affiliated with any real casino.
 
@@ -16,6 +16,7 @@ A portrait, mobile-first 3D card casino made with **three.js**: twenty games aga
 | Texas Hold'em Bonus | Flop 2×, turn and river bets, AA bonus up to 1000:1 |
 | Crazy 4 Poker | Super Bonus (four Aces 200:1), Queens Up, play 3× with Aces |
 | High Card Flush | Seven cards, longest flush wins, raise up to 3×, flush side bets |
+| Showdown Poker | Build a five-card hand one confirmed card at a time against a Monte Carlo dealer; Check / Double / Fold after cards 2 and 4, 1:1 on the total bet |
 | Four Card Poker | Play 1×–3×, player wins ties, Aces Up |
 | 3 Card Hold'em | Two raises, best three cards of five, Pair or Suited and Straight or Up side bets |
 | Video Poker | Jacks or Better 9/6, hold & draw, LED meters, simple-strategy hint |
@@ -29,7 +30,7 @@ A portrait, mobile-first 3D card casino made with **three.js**: twenty games aga
 | Casino War | War or surrender on ties, tie bet 10:1 |
 | Red Dog | Spread payouts, raise, three of a kind 11:1 |
 
-Every table opens with a shuffle show (ribbon spread, wave turnover, riffle, bridge), deals and collects cards with animation, and uses icon buttons. Text is in English by default with Portuguese available in the settings.
+Every table opens with a shuffle show (ribbon spread, wave turnover, riffle, bridge), deals and collects cards with animation, and uses icon buttons. Motion is physically modelled: cards fly low, land and slide on the felt with friction, and turn over by rolling on one edge; chips fly on ballistic arcs, bounce and wobble flat like coins; stacks lean with inertia when pushed. Text is in English by default with Portuguese available in the settings.
 
 ## Run
 
@@ -37,7 +38,8 @@ Every table opens with a shuffle show (ribbon spread, wave turnover, riffle, bri
 npm install
 npm run dev          # http://127.0.0.1:5173
 npm run dev -- --host  # open from a phone on the same network
-npm run test         # 102 rule / payout / RTP tests
+npm run test         # 132 rule / payout / RTP tests
+npm run sim:showdown # Showdown Poker balance report → docs/showdown-balance.md
 npm run build        # static site in dist/
 ```
 
@@ -54,4 +56,4 @@ Kenney *Casino Audio* (CC0), *Felt Backgrounds* by jbp4444 (CC0), English patter
 
 ### Português
 
-Cassino de cartas 3D para celular em pé, feito com three.js: 15 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Rode com `npm install` e `npm run dev`.
+Cassino de cartas 3D para celular em pé, feito com three.js: 21 jogos contra o dealer, animações de cartas e fichas, HUD estilo video poker. Somente fichas fictícias — sem dinheiro real. Rode com `npm install` e `npm run dev`.

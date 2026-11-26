@@ -36,6 +36,8 @@ export abstract class TableGame implements GameView {
   private off: (() => void)[] = [];
   private tmp = new THREE.Vector3();
   private discards = 0;
+  /** False when the game's own rules engine takes the opening bet from the wallet. */
+  protected debitsOnDeal = true;
 
   constructor(
     protected g: GameCtx,
@@ -211,7 +213,7 @@ export abstract class TableGame implements GameView {
     hud.setBetBar(null);
     this.last = this.spots.amounts();
     for (const s of this.spots.spots.values()) if (s.def.auto) delete this.last[s.def.id];
-    wallet.debit(total);
+    if (this.debitsOnDeal) wallet.debit(total);
     if (this.shoe.needsShuffle) await this.reshuffle();
     else if (this.shoe.decks === 1) this.shoe.shuffle();
     await this.playRound();
@@ -305,8 +307,11 @@ export abstract class TableGame implements GameView {
     return this.spots.place(id, amount);
   }
 
-  /** Pays/collects every spot from a `ret` map (stake + winnings) and shows the banner. */
-  protected async settle(ret: Record<string, number>, opts: { big?: string; folded?: boolean } = {}) {
+  /**
+   * Pays/collects every spot from a `ret` map (stake + winnings) and shows the banner.
+   * `credited`: the game's rules engine already paid the wallet; only animate.
+   */
+  protected async settle(ret: Record<string, number>, opts: { big?: string; folded?: boolean; credited?: boolean } = {}) {
     const { wallet } = this.g;
     const jobs: Promise<void>[] = [];
     let wager = 0;
@@ -321,7 +326,7 @@ export abstract class TableGame implements GameView {
       else if (r < stake) jobs.push(this.spots.lose(id));
     }
     await Promise.all(jobs);
-    wallet.credit(back);
+    if (!opts.credited) wallet.credit(back);
     const net = back - wager;
     const banner = resultBanner(this.g, net, wager, opts);
     await finishXP(this.g, wager, net, banner);
