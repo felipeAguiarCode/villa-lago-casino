@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BOX_D, BOX_T, DeckBox } from './deckBox';
 import gsap from 'gsap';
 import type { Stage } from './stage';
 import { CARD_H, CARD_W } from './cardMesh';
@@ -20,6 +21,7 @@ export const FELTS = {
   russian: '#7a1e1e',
   doubledraw: '#1f3f78',
   showdown: '#0f5f45',
+  abyss: '#231a4e',
   trump21: '#26202e',
   thb: '#0f5a52',
   crazy4: '#7a3a12',
@@ -36,7 +38,7 @@ export class Table {
   private decals = new THREE.Group();
   readonly shoe = new THREE.Group();
   readonly tray = new THREE.Group();
-  private shoeStack!: THREE.Mesh;
+  private deckBox!: DeckBox;
   private trayStack!: THREE.Mesh;
   private rail = new THREE.Group();
   private stackMat!: THREE.MeshStandardMaterial[];
@@ -157,21 +159,15 @@ export class Table {
   refreshBack(tex: THREE.Texture) {
     if (!this.stackMat) return;
     this.stackMat[2] = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 });
-    this.shoeStack.material = this.stackMat;
     this.trayStack.material = this.stackMat;
+    if (tex.image instanceof HTMLCanvasElement) this.deckBox.setBack(tex.image);
   }
 
+  /** The sealed deck box the cards are dealt from. */
   private buildShoe(backTexture: () => THREE.Texture) {
-    const wood = new THREE.MeshStandardMaterial({ color: '#3a1f10', roughness: 0.42, metalness: 0.05 });
-    const gold = new THREE.MeshStandardMaterial({ color: '#d4ad55', roughness: 0.3, metalness: 1 });
-    const base = new THREE.Mesh(new THREE.BoxGeometry(CARD_W + 0.24, 0.34, CARD_H + 0.55), wood);
-    base.position.y = 0.17;
-    const lip = new THREE.Mesh(new THREE.BoxGeometry(CARD_W + 0.26, 0.04, 0.06), gold);
-    lip.position.set(0, 0.36, (CARD_H + 0.55) / 2 - 0.03);
-    this.shoeStack = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 1, CARD_H), this.stackMaterials(backTexture));
-    this.shoeStack.position.y = 0.36;
-    this.shoe.add(base, lip, this.shoeStack);
-    this.setShoeFill(1);
+    const img = backTexture().image;
+    this.deckBox = new DeckBox(img instanceof HTMLCanvasElement ? img : null);
+    this.shoe.add(this.deckBox.group);
   }
 
   private buildTray(backTexture: () => THREE.Texture) {
@@ -183,12 +179,12 @@ export class Table {
     this.setTrayFill(0);
   }
 
-  /** 0..1 of the shoe still loaded. */
+  /** 0..1 of the shoe still loaded (the sealed box doesn't show it). */
   setShoeFill(f: number) {
-    const h = Math.max(0.01, 0.3 * f);
-    this.shoeStack.scale.y = h;
-    this.shoeStack.position.y = 0.36 - 0.3 + h / 2 + 0.02;
+    this.shoeFill = f;
   }
+
+  shoeFill = 1;
 
   setTrayFill(f: number) {
     const h = Math.max(0.001, 0.26 * f);
@@ -199,7 +195,7 @@ export class Table {
 
   /** World point where cards leave the shoe. */
   shoeMouth(): THREE.Vector3 {
-    return this.shoe.localToWorld(new THREE.Vector3(0, 0.42, (CARD_H + 0.55) / 2 - 0.25));
+    return this.shoe.localToWorld(new THREE.Vector3(0, BOX_T + 0.02, BOX_D / 2 - 0.3));
   }
 
   trayTop(): THREE.Vector3 {
@@ -216,7 +212,7 @@ export class Table {
 
   placeProps() {
     const s = this.stage;
-    const shoe = s.screenToTable(0.1, 0.1);
+    const shoe = s.screenToTable(0.105, 0.118);
     this.shoe.position.copy(shoe);
     this.shoe.rotation.y = -0.6;
     const tray = s.screenToTable(0.9, 0.1);

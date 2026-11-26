@@ -1,5 +1,6 @@
 import { isRed, rankLabel, rankOf, suitOf, SUIT_NAME, type Card } from '../core/cards';
 import type { BackColor } from '../core/settings';
+import { drawEmblem } from '../ui/emblem';
 import { drawSuit } from './suits';
 
 export const FACE_W = 512;
@@ -258,32 +259,8 @@ export function renderBack(color: BackColor): HTMLCanvasElement {
   g.lineWidth = 4;
   roundRect(g, m + 12, m + 12, FACE_W - 2 * m - 24, FACE_H - 2 * m - 24, RAD - 20);
   g.stroke();
-  // medallion
-  g.save();
-  g.translate(256, 358);
-  g.fillStyle = c2;
-  g.beginPath();
-  g.ellipse(0, 0, 112, 128, 0, 0, Math.PI * 2);
-  g.fill();
-  g.strokeStyle = '#efcf86';
-  g.lineWidth = 6;
-  g.stroke();
-  g.lineWidth = 2;
-  g.beginPath();
-  g.ellipse(0, 0, 98, 114, 0, 0, Math.PI * 2);
-  g.stroke();
-  const tg = g.createLinearGradient(0, -60, 0, 60);
-  tg.addColorStop(0, '#fff1c4');
-  tg.addColorStop(0.5, '#e7c06a');
-  tg.addColorStop(1, '#a8792b');
-  g.fillStyle = tg;
-  g.font = '700 118px "Cinzel", serif';
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillText('VL', 0, 6);
-  g.font = '700 20px "Cinzel", serif';
-  g.fillText('CASINO', 0, 78);
-  g.restore();
+  // the casino symbol: VL on a golden chip
+  drawEmblem(g, 256, 358, 118);
   return cv;
 }
 

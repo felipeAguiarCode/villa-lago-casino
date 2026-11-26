@@ -18,6 +18,8 @@ import { FourCardView } from './games/fourcard/view';
 import { Holdem3View } from './games/holdem3/view';
 import { RussianView } from './games/russian/view';
 import { DoubleDrawView } from './games/doubledraw/view';
+import { AbyssView } from './games/abyss/view';
+import { setFavicon } from './ui/emblem';
 import { ShowdownView } from './games/showdown/view';
 import { Trump21View } from './games/trump21/view';
 import { ThbView } from './games/thb/view';
@@ -137,6 +139,7 @@ export class App {
     this.games.set('russian', new RussianView(this.ctx));
     this.games.set('doubledraw', new DoubleDrawView(this.ctx));
     this.games.set('showdown', new ShowdownView(this.ctx));
+    this.games.set('abyss', new AbyssView(this.ctx));
     this.games.set('trump21', new Trump21View(this.ctx));
 
     this.lobby = new Lobby(
@@ -176,6 +179,7 @@ export class App {
 
   /** Shows the lobby once the splash is gone. */
   async start() {
+    setFavicon();
     await this.showLobby(false);
   }
 

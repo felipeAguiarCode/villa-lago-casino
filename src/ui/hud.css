@@ -2664,3 +2664,92 @@ input[type='range'] {
       inset 0 0 calc(4 * var(--u)) rgba(0, 0, 0, 0.6);
   }
 }
+
+/* ---------------------------------------------------------------- lobby emblem */
+.brandrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(2.4 * var(--u));
+}
+
+.brandrow .emblem {
+  width: calc(11 * var(--u));
+  height: calc(11 * var(--u));
+  filter: drop-shadow(0 0 calc(2.4 * var(--u)) rgba(255, 210, 110, 0.35));
+}
+
+/* ---------------------------------------------------------------- Abyss Poker skills */
+.skills {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--u));
+  margin-top: calc(1 * var(--u));
+}
+
+.skills h4 {
+  margin: calc(2.5 * var(--u)) 0 0;
+}
+
+.skillrow {
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--u));
+  width: 100%;
+  text-align: left;
+  padding: calc(2.2 * var(--u)) calc(3 * var(--u));
+  border-radius: calc(2.6 * var(--u));
+  border: 1px solid rgba(214, 180, 106, 0.5);
+  background: linear-gradient(180deg, rgba(48, 36, 92, 0.95), rgba(18, 13, 38, 0.95));
+  color: #f3ead2;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.skillrow:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.skillrow:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.skillrow .sk-ic {
+  flex: 0 0 auto;
+  width: calc(8 * var(--u));
+  height: calc(8 * var(--u));
+  color: #ffd76a;
+}
+
+.skillrow .sk-ic svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.skillrow .sk-txt {
+  flex: 1;
+  font-size: calc(3.5 * var(--u));
+  line-height: 1.25;
+}
+
+.skillrow .sk-txt b {
+  display: block;
+  font-size: calc(4.2 * var(--u));
+  color: #ffe39a;
+}
+
+.skillrow .sk-why {
+  display: block;
+  color: #ff9c8a;
+  font-size: calc(3.2 * var(--u));
+}
+
+.skillrow .sk-price {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: calc(4.6 * var(--u));
+  color: #9fe28a;
+}

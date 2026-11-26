@@ -1,4 +1,5 @@
 import { locale } from './i18n';
+import { levelBonus, xpForHand, xpForLevel } from './progression';
 
 /** Fictional chips only: no real money, no purchases. Persisted per browser. */
 
@@ -16,7 +17,7 @@ export interface WalletState {
 
 type Listener = (w: Wallet, delta: number) => void;
 
-export const xpForLevel = (level: number) => 100 + 60 * (level - 1);
+export { xpForLevel };
 
 export class Wallet {
   s: WalletState;
@@ -74,14 +75,14 @@ export class Wallet {
   addHand(wagered: number, net: number): { levelUp: number | null; bonus: number } {
     this.s.hands++;
     if (net > this.s.biggestWin) this.s.biggestWin = net;
-    this.s.xp += 10 + Math.floor(wagered / 25);
+    this.s.xp += xpForHand(wagered);
     let levelUp: number | null = null;
     let bonus = 0;
     while (this.s.xp >= xpForLevel(this.s.level)) {
       this.s.xp -= xpForLevel(this.s.level);
       this.s.level++;
       levelUp = this.s.level;
-      bonus += 250 * this.s.level;
+      bonus += levelBonus(this.s.level);
     }
     if (bonus) this.s.balance += bonus;
     this.save(bonus);

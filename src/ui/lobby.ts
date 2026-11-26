@@ -2,6 +2,7 @@ import { parseCard, type Card } from '../core/cards';
 import { t as tr } from '../core/i18n';
 import type { GameInfo } from '../games/types';
 import { cardDataURL } from '../table/cardFaces';
+import { emblemDataURL } from './emblem';
 import { ICONS } from './icons';
 
 /** Lobby art codes: normal codes ("As"), "jk" = joker, "n7" = numbered trump-21 card. */
@@ -21,7 +22,7 @@ export class Lobby {
     el.className = 'hidden';
     el.innerHTML = `
       <div class="logo">
-        <div class="name gold-text">VILLA LAGO</div>
+        <div class="brandrow"><img class="emblem" alt="" src="${emblemDataURL(160)}"><div class="name gold-text">VILLA LAGO</div></div>
         <div class="sub">CASINO</div>
         <div class="rule"></div>
       </div>
