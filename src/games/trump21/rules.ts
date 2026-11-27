@@ -8,6 +8,10 @@ import { cryptoRng, shuffle, type Rng } from '../../core/rng';
  * hit in five, while the trump hand has room). It joins the hand, the turn stays the player's and
  * the next hit is a sure card, so the bonus never costs the draw. The dealer's hits bring a trump
  * along with the card (TRUMP_ON_HIT).
+ *
+ * A trump hand holds seven (MAX_TRUMPS); a new one that comes with the player's hand full is
+ * discarded at once. Target cards set the line to 17, 18, 19, 20, 21, 22, 23, 24, 27 or 29; the
+ * family is dealt at a reduced weight (TARGET_DEAL_SCALE) so it doesn't crowd out the others.
  */
 
 export type Side = 'player' | 'dealer';
@@ -34,9 +38,15 @@ export type TrumpId =
   | 'reshuffle'
   // target
   | 'line17'
+  | 'line18'
+  | 'line19'
+  | 'line20'
+  | 'reset21'
+  | 'line22'
+  | 'line23'
   | 'line24'
   | 'line27'
-  | 'reset21'
+  | 'line29'
   // attack
   | 'burn'
   | 'switch'
@@ -49,6 +59,10 @@ export type TrumpId =
   | 'gift'
   | 'overload'
   | 'rewind'
+  | 'swapLow'
+  | 'swapHigh'
+  | 'swapHands'
+  | 'redeal'
   // defence
   | 'barrier'
   // stakes
@@ -89,9 +103,15 @@ export const TRUMPS: TrumpInfo[] = [
   { id: 'foresight', rarity: 'common' },
   { id: 'reshuffle', rarity: 'common' },
   { id: 'line17', rarity: 'uncommon', dealer: true },
+  { id: 'line18', rarity: 'uncommon', dealer: true },
+  { id: 'line19', rarity: 'uncommon', dealer: true },
+  { id: 'line20', rarity: 'common', dealer: true },
+  { id: 'reset21', rarity: 'uncommon', dealer: true },
+  { id: 'line22', rarity: 'common', dealer: true },
+  { id: 'line23', rarity: 'uncommon', dealer: true },
   { id: 'line24', rarity: 'uncommon', dealer: true },
   { id: 'line27', rarity: 'uncommon', dealer: true },
-  { id: 'reset21', rarity: 'uncommon', dealer: true },
+  { id: 'line29', rarity: 'rare' },
   { id: 'burn', rarity: 'uncommon', dealer: true },
   { id: 'switch', rarity: 'uncommon' },
   { id: 'force', rarity: 'uncommon', dealer: true },
@@ -103,6 +123,10 @@ export const TRUMPS: TrumpInfo[] = [
   { id: 'gift', rarity: 'uncommon' },
   { id: 'overload', rarity: 'rare' },
   { id: 'rewind', rarity: 'uncommon' },
+  { id: 'swapLow', rarity: 'uncommon' },
+  { id: 'swapHigh', rarity: 'uncommon' },
+  { id: 'swapHands', rarity: 'rare' },
+  { id: 'redeal', rarity: 'uncommon' },
   { id: 'barrier', rarity: 'uncommon', dealer: true },
   { id: 'guard', rarity: 'common' },
   { id: 'fortress', rarity: 'rare' },
@@ -116,7 +140,8 @@ export const RARITY_WEIGHT: Record<Rarity, number> = { common: 10, uncommon: 5, 
 export const rarityOf = (id: TrumpId) => TRUMPS.find((t) => t.id === id)!.rarity;
 export const PLAYER_TRUMPS: TrumpId[] = TRUMPS.map((t) => t.id);
 export const DEALER_TRUMPS: TrumpId[] = TRUMPS.filter((t) => t.dealer).map((t) => t.id);
-export const MAX_TRUMPS = 5;
+/** A trump hand holds seven at most (the player's: a new one that comes with the hand full is discarded at once). */
+export const MAX_TRUMPS = 7;
 /** Chance that a card the dealer hits brings a trump along with it. */
 export const TRUMP_ON_HIT = 0.3;
 /** Chance that the player's hit turns up a bonus trump instead of the card (the next hit is then a sure card). */
@@ -127,9 +152,46 @@ export const BULLSEYE_EXTRA = 2;
 const CALLS: Partial<Record<TrumpId, number>> = { call1: 1, call2: 2, call3: 3, call4: 4, call5: 5, call6: 6, call7: 7, call8: 8 };
 
 /** Trumps aimed at the opponent. A Barrier blocks the first one played against its owner in the round. */
-export const ATTACK_TRUMPS: TrumpId[] = ['burn', 'switch', 'force', 'freeze', 'shatter', 'pickpocket', 'blindfold', 'heist', 'gift', 'overload', 'rewind'];
+export const ATTACK_TRUMPS: TrumpId[] = [
+  'burn',
+  'switch',
+  'force',
+  'freeze',
+  'shatter',
+  'pickpocket',
+  'blindfold',
+  'heist',
+  'gift',
+  'overload',
+  'rewind',
+  'swapLow',
+  'swapHigh',
+  'swapHands',
+  'redeal',
+];
 export const isAttackTrump = (id: TrumpId) => ATTACK_TRUMPS.includes(id);
-const LINES: Partial<Record<TrumpId, number>> = { line17: 17, line24: 24, line27: 27, reset21: 21 };
+const LINES: Partial<Record<TrumpId, number>> = {
+  line17: 17,
+  line18: 18,
+  line19: 19,
+  line20: 20,
+  reset21: 21,
+  line22: 22,
+  line23: 23,
+  line24: 24,
+  line27: 27,
+  line29: 29,
+};
+/** The target a line sets (Line 17…29, Reset 21); undefined for any other trump. */
+export const lineValue = (id: TrumpId): number | undefined => LINES[id];
+export const isTargetTrump = (id: TrumpId) => LINES[id] !== undefined;
+/**
+ * The ten target cards are dealt at 4/10 of their rarity weight, so the family keeps about the
+ * share the first four lines had (~8.6% of the player's trumps; it was 8.2%).
+ */
+export const TARGET_DEAL_SCALE = 0.4;
+/** Integer dealing weight of a trump: its rarity weight ×10, or ×4 for a target card. */
+export const dealWeight = (id: TrumpId): number => RARITY_WEIGHT[rarityOf(id)] * Math.round((isTargetTrump(id) ? TARGET_DEAL_SCALE : 1) * 10);
 
 export type DuelEvent =
   | { t: 'draw'; side: Side; value: number }
@@ -143,6 +205,15 @@ export type DuelEvent =
   | { t: 'move'; from: Side; to: Side; value: number }
   /** `side`'s Barrier stopped the opponent's attack trump `id`. */
   | { t: 'blocked'; side: Side; id: TrumpId }
+  /**
+   * Low Swap / High Swap (`a`: the card `side` gave, `b`: the one it took, each to the other's
+   * place in the hand) or Hand Swap (the two hands change places).
+   */
+  | { t: 'swap'; side: Side; kind: 'low' | 'high' | 'hands'; a?: number; b?: number }
+  /** Redeal: every card of both hands goes back into the deck (the draws that follow deal them again). */
+  | { t: 'redeal'; side: Side }
+  /** A new trump came with the player's hand full (MAX_TRUMPS): it is discarded at once. */
+  | { t: 'overflow'; side: Side; id: TrumpId }
   | { t: 'lose'; side: Side; id: TrumpId; by: 'shatter' | 'pickpocket' }
   | { t: 'foresee'; value: number }
   | { t: 'shuffle' }
@@ -243,19 +314,28 @@ export class Duel {
 
   private pickTrump(side: Side): TrumpId {
     const pool = TRUMPS.filter((t) => side === 'player' || t.dealer);
-    const total = pool.reduce((a, t) => a + RARITY_WEIGHT[t.rarity], 0);
+    const total = pool.reduce((a, t) => a + dealWeight(t.id), 0);
     let r = this.rng(total);
     for (const t of pool) {
-      r -= RARITY_WEIGHT[t.rarity];
+      r -= dealWeight(t.id);
       if (r < 0) return t.id;
     }
     return pool[0].id;
   }
 
+  /**
+   * A new trump, up to seven in a hand. One that comes with the player's hand full is discarded at
+   * once (a full hand turns up no bonus trump on a hit); the dealer's full hand just gets none.
+   */
   private grant(side: Side, chance: number, bonus = false): boolean {
-    if (this.trumps[side].length >= MAX_TRUMPS) return false;
+    const full = this.trumps[side].length >= MAX_TRUMPS;
+    if (full && (side === 'dealer' || bonus)) return false;
     if (this.rng(1000) >= chance * 1000) return false;
     const id = this.pickTrump(side);
+    if (full) {
+      this.emit({ t: 'overflow', side, id });
+      return false;
+    }
     this.trumps[side].push(id);
     this.emit(bonus ? { t: 'gain', side, id, bonus } : { t: 'gain', side, id });
     return true;
@@ -341,6 +421,12 @@ export class Duel {
         return this.deck.length >= 2;
       case 'rewind':
         return me.length >= 2 && opp.length >= 2;
+      case 'swapLow':
+      case 'swapHigh':
+      case 'swapHands':
+        return me.length > 0 && opp.length > 0;
+      case 'redeal':
+        return me.length + opp.length > 0;
       case 'barrier':
         return !this.barrier[side];
       case 'bullseye':
@@ -492,7 +578,7 @@ export class Duel {
         if (this.trumps[side].length < MAX_TRUMPS) {
           this.trumps[side].push(got);
           this.emit({ t: 'gain', side, id: got });
-        }
+        } else this.emit({ t: 'overflow', side, id: got });
         break;
       }
       case 'blindfold':
@@ -545,6 +631,54 @@ export class Duel {
         this.giveBack(other);
         drew();
         break;
+      case 'swapLow':
+      case 'swapHigh': {
+        // the lowest (highest) card of each hand takes the other's place
+        const high = id === 'swapHigh';
+        const mine = this[side];
+        const theirs = this[other];
+        const i = mine.indexOf(high ? Math.max(...mine) : Math.min(...mine));
+        const j = theirs.indexOf(high ? Math.max(...theirs) : Math.min(...theirs));
+        const a = mine[i];
+        const b = theirs[j];
+        mine[i] = b;
+        theirs[j] = a;
+        // the dealer's face-down card changed hands: the player knows the card in its place now
+        if ((side === 'dealer' ? i : j) === 0) this.glimpsed = true;
+        this.emit({ t: 'swap', side, kind: high ? 'high' : 'low', a, b });
+        drew();
+        break;
+      }
+      case 'swapHands': {
+        const p = this.player;
+        this.player = this.dealer;
+        this.dealer = p;
+        // the player has seen every card of both hands now
+        this.glimpsed = true;
+        this.emit({ t: 'swap', side, kind: 'hands' });
+        drew();
+        break;
+      }
+      case 'redeal': {
+        // every card back, then the same number each again, one at a time, the trump's owner first
+        const left: Record<Side, number> = { player: this.player.length, dealer: this.dealer.length };
+        this.deck = shuffle([...this.deck, ...this.player, ...this.dealer], this.rng);
+        this.player = [];
+        this.dealer = [];
+        this.knownTop = false;
+        this.glimpsed = false;
+        this.emit({ t: 'redeal', side });
+        let turn: Side = side;
+        while (left.player + left.dealer > 0) {
+          if (left[turn] > 0) {
+            this.give(turn);
+            left[turn]--;
+          }
+          turn = turn === 'player' ? 'dealer' : 'player';
+        }
+        drew();
+        break;
+      }
       case 'barrier':
         this.barrier[side] = true;
         break;
@@ -609,11 +743,17 @@ export class Duel {
       if (has('lighten') && d - Math.max(...this.dealer) <= T) return 'lighten';
       if (has('recall')) return 'recall';
     }
-    if (d > T && d <= 21 && has('reset21')) return 'reset21';
-    if (d > T && d <= 24 && has('line24')) return 'line24';
-    if (d > T && d <= 27 && has('line27')) return 'line27';
+    // the target cards he holds, lowest line first
+    const lines = TRUMPS.map((x) => x.id)
+      .filter((id) => LINES[id] !== undefined && LINES[id] !== T && has(id))
+      .sort((a, b) => LINES[a]! - LINES[b]!);
+    // over the target: the lowest line that covers his total
+    const save = d > T ? lines.find((id) => LINES[id]! >= d) : undefined;
+    if (save) return save;
     if (this.trumps.player.length >= 3 && has('shatter')) return 'shatter';
-    if (T === 21 && d >= 14 && d <= 17 && est > 17 && has('line17')) return 'line17';
+    // a made hand: pull the target down onto it (at most 3 above it) when the player looks higher
+    const pull = lines.find((id) => LINES[id]! < T && d <= LINES[id]! && LINES[id]! - d <= 3 && est > LINES[id]!);
+    if (pull) return pull;
     if (est >= T - 3 && est <= T && has('force')) return 'force';
     if (this.player.length >= 2 && this.player[this.player.length - 1] >= 6 && est >= T - 2 && has('burn')) return 'burn';
     if (est <= T - 7 && has('freeze')) return 'freeze';

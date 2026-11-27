@@ -273,7 +273,7 @@ describe('Trump 21', () => {
   });
 });
 
-import { BONUS_ON_HIT, BULLSEYE_EXTRA, MAX_TRUMPS, TRUMPS, type DuelEvent, type TrumpId } from '../src/games/trump21/rules';
+import { ATTACK_TRUMPS, BONUS_ON_HIT, BULLSEYE_EXTRA, DEALER_TRUMPS, dealWeight, isTargetTrump, lineValue, MAX_TRUMPS, TRUMPS, type DuelEvent, type TrumpId } from '../src/games/trump21/rules';
 
 describe('Trump 21 — trump variations', () => {
   const fresh = (seed: number, trumps: TrumpId[]) => {
@@ -283,9 +283,9 @@ describe('Trump 21 — trump variations', () => {
     d.trumps.dealer = [];
     return d;
   };
-  it('has 39 trumps with unique ids', () => {
-    expect(TRUMPS.length).toBe(39);
-    expect(new Set(TRUMPS.map((t) => t.id)).size).toBe(39);
+  it('has 49 trumps with unique ids', () => {
+    expect(TRUMPS.length).toBe(49);
+    expect(new Set(TRUMPS.map((t) => t.id)).size).toBe(49);
   });
   it('draw control: feather, calls, twin, redraw', () => {
     const d = fresh(5, ['feather', 'twin', 'redraw']);
@@ -473,5 +473,94 @@ describe('Trump 21 — bonus trumps and the newer trumps', () => {
     expect(dealerPlays(spot([2, 7], [6, 11, 5, 3, 1], { dealer: ['recall', 'lighten'] }))).toBe('lighten');
     expect(dealerPlays(spot([2, 7], [11, 3, 9], { dealer: ['recall', 'lighten'] }))).toBe('recall');
     expect(dealerPlays(spot([2, 4], [9, 6], { dealer: ['heist'] }))).toBe('heist');
+  });
+});
+
+describe('Trump 21 — the swaps, Redeal, the new lines and the seven-trump hand', () => {
+  /** A duel set to an exact spot: the deck holds every card not in a hand; the dealer always plays his trump. */
+  const spot = (player: number[], dealer: number[], trumps: { player?: TrumpId[]; dealer?: TrumpId[] } = {}, seed = 1) => {
+    const d = new Duel(seededRng(seed));
+    d.start();
+    d.player = player.slice();
+    d.dealer = dealer.slice();
+    d.deck = Array.from({ length: 11 }, (_, i) => i + 1).filter((v) => !player.includes(v) && !dealer.includes(v));
+    d.trumps = { player: (trumps.player ?? []).slice(), dealer: (trumps.dealer ?? []).slice() };
+    d.aggression = 1;
+    return d;
+  };
+  const dealerPlays = (d: Duel) => d.dealerTurn().find((e): e is Extract<DuelEvent, { t: 'trump' }> => e.t === 'trump')?.id ?? null;
+
+  it('target cards for 17, 18, 19, 20, 21, 22, 23, 24, 27 and 29', () => {
+    const lines = TRUMPS.map((t) => t.id).filter(isTargetTrump);
+    expect(lines.map((id) => lineValue(id)).sort((a, b) => a! - b!)).toEqual([17, 18, 19, 20, 21, 22, 23, 24, 27, 29]);
+    for (const id of lines) {
+      const d = spot([3, 9], [5, 8], { player: [id] });
+      d.useTrump('player', id);
+      expect(d.target).toBe(lineValue(id));
+    }
+  });
+
+  it('the target family keeps about its old share of the deal', () => {
+    const share = (dealer: boolean) => {
+      const pool = TRUMPS.filter((t) => !dealer || t.dealer).map((t) => t.id);
+      const all = pool.reduce((a, id) => a + dealWeight(id), 0);
+      return pool.filter(isTargetTrump).reduce((a, id) => a + dealWeight(id), 0) / all;
+    };
+    expect(share(false)).toBeGreaterThan(0.07);
+    expect(share(false)).toBeLessThan(0.11);
+    expect(share(true)).toBeLessThan(0.3);
+  });
+
+  it('the new trumps are the player\'s; the swaps and Redeal are attacks', () => {
+    for (const id of ['swapLow', 'swapHigh', 'swapHands', 'redeal', 'line29'] as TrumpId[]) expect(DEALER_TRUMPS).not.toContain(id);
+    for (const id of ['swapLow', 'swapHigh', 'swapHands', 'redeal'] as TrumpId[]) expect(ATTACK_TRUMPS).toContain(id);
+  });
+
+  it('Low Swap and High Swap trade the lowest / highest card of each hand, each to the other\'s place', () => {
+    const d = spot([3, 9, 6], [10, 5, 2], { player: ['swapLow', 'swapHigh'] });
+    expect(d.useTrump('player', 'swapLow')).toContainEqual({ t: 'swap', side: 'player', kind: 'low', a: 3, b: 2 });
+    expect(d.player).toEqual([2, 9, 6]);
+    expect(d.dealer).toEqual([10, 5, 3]);
+    expect(d.glimpsed).toBe(false);
+    d.useTrump('player', 'swapHigh');
+    expect(d.player).toEqual([2, 10, 6]);
+    expect(d.dealer).toEqual([9, 5, 3]);
+    expect(d.glimpsed).toBe(true); // the face-down card came over
+  });
+
+  it('Hand Swap trades the hands; Redeal deals as many cards again, one each in turn', () => {
+    const d = spot([3, 9, 6], [10, 5], { player: ['swapHands', 'redeal'] });
+    d.useTrump('player', 'swapHands');
+    expect(d.player).toEqual([10, 5]);
+    expect(d.dealer).toEqual([3, 9, 6]);
+    const ev = d.useTrump('player', 'redeal');
+    expect(ev).toContainEqual({ t: 'redeal', side: 'player' });
+    expect(ev.filter((e): e is Extract<DuelEvent, { t: 'draw' }> => e.t === 'draw').map((e) => e.side)).toEqual(['player', 'dealer', 'player', 'dealer', 'dealer']);
+    expect(new Set([...d.player, ...d.dealer, ...d.deck]).size).toBe(11);
+    expect(d.glimpsed).toBe(false);
+  });
+
+  it('a Barrier stops a swap', () => {
+    const d = spot([3, 9], [10, 5], { player: ['swapHands'] });
+    d.barrier.dealer = true;
+    expect(d.useTrump('player', 'swapHands')).toContainEqual({ t: 'blocked', side: 'dealer', id: 'swapHands' });
+    expect(d.player).toEqual([3, 9]);
+  });
+
+  it('a hand holds seven trumps; a new one that comes with it full is discarded', () => {
+    expect(MAX_TRUMPS).toBe(7);
+    const d = spot([3, 9], [5, 8], { player: ['reinforce', ...Array<TrumpId>(MAX_TRUMPS - 1).fill('call2')] });
+    const ev = d.useTrump('player', 'reinforce');
+    expect(d.trumps.player.length).toBe(MAX_TRUMPS);
+    expect(ev.filter((e) => e.t === 'overflow' && e.side === 'player').length).toBe(1);
+    const e = new Duel(seededRng(4));
+    e.trumps.player = Array(MAX_TRUMPS).fill('call2');
+    expect(e.start().some((x) => x.t === 'overflow')).toBe(true);
+    expect(e.trumps.player.length).toBe(MAX_TRUMPS);
+  });
+
+  it('the dealer rescues a bust with the lowest line that covers it, and pulls the target onto a made hand', () => {
+    expect(dealerPlays(spot([2, 7], [11, 10, 1], { dealer: ['line27', 'line22', 'line24'] }))).toBe('line22');
+    expect(dealerPlays(spot([2, 11, 9], [10, 8], { dealer: ['line19', 'line20'] }))).toBe('line19');
   });
 });

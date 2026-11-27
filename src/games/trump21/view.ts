@@ -42,6 +42,18 @@ addStrings(
     'tr.call7.d': 'Draw the 7, if it is still in the deck',
     'tr.line17': 'Line 17',
     'tr.line17.d': 'The target becomes 17 this round',
+    'tr.line18': 'Line 18',
+    'tr.line18.d': 'The target becomes 18 this round',
+    'tr.line19': 'Line 19',
+    'tr.line19.d': 'The target becomes 19 this round',
+    'tr.line20': 'Line 20',
+    'tr.line20.d': 'The target becomes 20 this round',
+    'tr.line22': 'Line 22',
+    'tr.line22.d': 'The target becomes 22 this round',
+    'tr.line23': 'Line 23',
+    'tr.line23.d': 'The target becomes 23 this round',
+    'tr.line29': 'Line 29',
+    'tr.line29.d': 'The target becomes 29 this round',
     'tr.line24': 'Line 24',
     'tr.line24.d': 'The target becomes 24 this round',
     'tr.recall': 'Recall',
@@ -108,6 +120,16 @@ addStrings(
     'tr.bullseye.d': 'Win right on the target this round and it pays 3 to 1',
     'tr.reinforce': 'Reinforce',
     'tr.reinforce.d': 'Draw two new trump cards',
+    'tr.swapLow': 'Low Swap',
+    'tr.swapLow.d': "Swap your lowest card for the dealer's lowest card",
+    'tr.swapHigh': 'High Swap',
+    'tr.swapHigh.d': "Swap your highest card for the dealer's highest card",
+    'tr.swapHands': 'Hand Swap',
+    'tr.swapHands.d': "Swap your whole hand for the dealer's hand",
+    'tr.redeal': 'Redeal',
+    'tr.redeal.d': 'Both hands go back into the deck and each of you is dealt as many cards again, one at a time, taking turns (you first)',
+    't21.overflow': 'Hand full: {name} was discarded',
+    't21.redealt': 'Both hands dealt again',
     't21.bonusToast': '{name}: bonus trump! HIT again for your card',
     't21.dealerBonus': "A trump came out with the dealer's card",
     't21.blocked': 'Barrier! {name} was blocked',
@@ -130,9 +152,10 @@ addStrings(
       <h4>Winning</h4>
       <p>Closest to the <b>target</b> (21 unless a trump changes it) without going over wins 1:1. If both bust, the lower total wins. <b>Ties go to you.</b></p>
       <h4>Trump cards</h4>
-      <p>Each round you and the dealer get a trump card (up to five, kept between rounds). Tap a trump to play it any time on your turn; <b>press and hold it to read what it does</b> without playing it. There are {n} of them, common, uncommon and rare (gold border).</p>
+      <p>Each round you and the dealer get a trump card (up to <b>seven</b>, kept between rounds; one that comes with your hand full is discarded at once). Tap a trump to play it any time on your turn; <b>press and hold it to read what it does</b> without playing it. There are {n} of them, common, uncommon and rare (gold border).</p>
       <p><b>Bonus trumps:</b> about one hit in five turns up a trump card instead of your card. It joins your hand with its own sound, the turn stays yours, and your next hit is a sure card, so the bonus never costs you your draw. The dealer's cards can bring a trump along too.</p>
-      <p>The dealer plays trumps too! A <b>Barrier</b> blocks the next attack trump played against its owner.</p>`,
+      <p>The dealer plays trumps too! A <b>Barrier</b> blocks the next attack trump played against its owner.</p>
+      <p>Target cards set the line to 17, 18, 19, 20, 21, 22, 23, 24, 27 or 29.</p>`,
   },
   {
     't21.stakes': 'DOBRO',
@@ -160,6 +183,18 @@ addStrings(
     'tr.call7.d': 'Compra o 7, se ainda estiver no baralho',
     'tr.line17': 'Linha 17',
     'tr.line17.d': 'O alvo vira 17 nesta rodada',
+    'tr.line18': 'Linha 18',
+    'tr.line18.d': 'O alvo vira 18 nesta rodada',
+    'tr.line19': 'Linha 19',
+    'tr.line19.d': 'O alvo vira 19 nesta rodada',
+    'tr.line20': 'Linha 20',
+    'tr.line20.d': 'O alvo vira 20 nesta rodada',
+    'tr.line22': 'Linha 22',
+    'tr.line22.d': 'O alvo vira 22 nesta rodada',
+    'tr.line23': 'Linha 23',
+    'tr.line23.d': 'O alvo vira 23 nesta rodada',
+    'tr.line29': 'Linha 29',
+    'tr.line29.d': 'O alvo vira 29 nesta rodada',
     'tr.line24': 'Linha 24',
     'tr.line24.d': 'O alvo vira 24 nesta rodada',
     'tr.recall': 'Recolher',
@@ -226,6 +261,16 @@ addStrings(
     'tr.bullseye.d': 'Vencer cravando o alvo nesta rodada paga 3 para 1',
     'tr.reinforce': 'Reforço',
     'tr.reinforce.d': 'Ganha dois trunfos novos',
+    'tr.swapLow': 'Troca Baixa',
+    'tr.swapLow.d': 'Troca a sua carta mais baixa pela carta mais baixa do dealer',
+    'tr.swapHigh': 'Troca Alta',
+    'tr.swapHigh.d': 'Troca a sua carta mais alta pela carta mais alta do dealer',
+    'tr.swapHands': 'Troca de Mãos',
+    'tr.swapHands.d': 'Troca a sua mão inteira pela mão do dealer',
+    'tr.redeal': 'Redistribuir',
+    'tr.redeal.d': 'As cartas das duas mãos voltam ao baralho e cada um recebe de novo a mesma quantidade, uma de cada vez, alternando (você primeiro)',
+    't21.overflow': 'Mão cheia: {name} foi descartado',
+    't21.redealt': 'As duas mãos foram distribuídas de novo',
     't21.bonusToast': '{name}: trunfo bônus! PEÇA de novo para receber sua carta',
     't21.dealerBonus': 'Saiu um trunfo com a carta do dealer',
     't21.blocked': 'Barreira! {name} foi bloqueado',
@@ -248,13 +293,22 @@ addStrings(
       <h4>Vitória</h4>
       <p>Quem chegar mais perto do <b>alvo</b> (21, a não ser que um trunfo mude) sem passar ganha 1:1. Se os dois estourarem, vence o total menor. <b>Empate é seu.</b></p>
       <h4>Cartas trunfo</h4>
-      <p>A cada rodada você e o dealer ganham um trunfo (até cinco, guardados entre rodadas). Toque num trunfo para usá-lo no seu turno; <b>segure-o para ler o que ele faz</b> sem usá-lo. São {n}, entre comuns, incomuns e raros (borda dourada).</p>
+      <p>A cada rodada você e o dealer ganham um trunfo (até <b>sete</b>, guardados entre rodadas; um que chega com a sua mão cheia é descartado na hora). Toque num trunfo para usá-lo no seu turno; <b>segure-o para ler o que ele faz</b> sem usá-lo. São {n}, entre comuns, incomuns e raros (borda dourada).</p>
       <p><b>Trunfos bônus:</b> mais ou menos um pedido em cada cinco tira um trunfo no lugar da sua carta. Ele entra na sua mão com um som próprio, o turno continua seu e o próximo pedido é carta garantida, então o bônus nunca custa o seu saque. As cartas do dealer também podem trazer um trunfo junto.</p>
-      <p>O dealer também usa trunfos! A <b>Barreira</b> bloqueia o próximo trunfo de ataque usado contra quem a jogou.</p>`,
+      <p>O dealer também usa trunfos! A <b>Barreira</b> bloqueia o próximo trunfo de ataque usado contra quem a jogou.</p>
+      <p>Os trunfos de alvo levam a linha para 17, 18, 19, 20, 21, 22, 23, 24, 27 ou 29.</p>`,
   },
 );
 
 const V = { dealer: 0.245, target: 0.372, player: 0.5 };
+/** Low Swap / High Swap: two cards under a two-way arrow, an arrow cut out of each (down: low, up: high). */
+function swapArt(high: boolean) {
+  const mark = (x: number) => (high ? `M${x - 2.2} 17.6h4.4L${x} 13.6z` : `M${x - 2.2} 13.6h4.4L${x} 17.6z`);
+  return (
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 5 5.5 1.5v2.4h13V1.5l4 3.5-4 3.5V6.1h-13v2.4z"/>' +
+    `<path fill-rule="evenodd" d="M2 10h8.2v12H2z${mark(6.1)}M13.8 10H22v12h-8.2z${mark(17.9)}"/></svg>`
+  );
+}
 /** Art of the newer trumps, drawn like the shared 24×24 icons. */
 const art = (d: string, evenodd = false) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path${evenodd ? ' fill-rule="evenodd"' : ''} d="${d}"/></svg>`;
 const NEW_ART = {
@@ -277,6 +331,18 @@ const NEW_ART = {
     '<path d="M9.3 13.3 18.9 3.7l1.4 1.4-9.6 9.6z M17.6 1.6l.9 2.6 2.6.9 2.1-2.1-2.3-.7-.7-2.3z"/></svg>',
   // a card with a plus: new trumps
   reinforce: art('M5 2h14v20H5zM7.2 4.2v15.6h9.6V4.2zM11 8h2v3h3v2h-3v3h-2v-3H8v-2h3z', true),
+  // two cards under a two-way arrow, each marked low (down) or high (up)
+  swapLow: swapArt(false),
+  swapHigh: swapArt(true),
+  // two fanned hands under a two-way arrow
+  swapHands:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 5 5.5 1.5v2.4h13V1.5l4 3.5-4 3.5V6.1h-13v2.4z"/>' +
+    '<rect x="1.3" y="11" width="7" height="11" rx="1.2" opacity=".55" transform="rotate(-12 4.8 16.5)"/><rect x="4.2" y="10.4" width="7" height="11" rx="1.2"/>' +
+    '<rect x="15.7" y="11" width="7" height="11" rx="1.2" opacity=".55" transform="rotate(12 19.2 16.5)"/><rect x="12.8" y="10.4" width="7" height="11" rx="1.2"/></svg>',
+  // the deck, dealing out to both sides again
+  redeal:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="1.5" width="7" height="10" rx="1.2" opacity=".5"/><rect x="8.5" y="3.8" width="7" height="10" rx="1.2" opacity=".75"/>' +
+    '<rect x="8.5" y="6.1" width="7" height="10" rx="1.2"/><path d="M7.2 18.4H4.6v2.3L1 17.6l3.6-3.1v2.3h2.6zM16.8 18.4h2.6v2.3l3.6-3.1-3.6-3.1v2.3h-2.6z"/></svg>',
 };
 
 const TRUMP_ICON: Record<TrumpId, { icon?: IconName; text?: string; svg?: string }> = {
@@ -298,9 +364,15 @@ const TRUMP_ICON: Record<TrumpId, { icon?: IconName; text?: string; svg?: string
   foresight: { icon: 'crystal' },
   reshuffle: { icon: 'shuffle' },
   line17: { text: '17' },
+  line18: { text: '18' },
+  line19: { text: '19' },
+  line20: { text: '20' },
+  reset21: { text: '21' },
+  line22: { text: '22' },
+  line23: { text: '23' },
   line24: { text: '24' },
   line27: { text: '27' },
-  reset21: { text: '21' },
+  line29: { text: '29' },
   burn: { icon: 'flame' },
   switch: { icon: 'swap' },
   force: { icon: 'bolt' },
@@ -319,6 +391,10 @@ const TRUMP_ICON: Record<TrumpId, { icon?: IconName; text?: string; svg?: string
   barrier: { svg: NEW_ART.barrier },
   bullseye: { svg: NEW_ART.bullseye },
   reinforce: { svg: NEW_ART.reinforce },
+  swapLow: { svg: NEW_ART.swapLow },
+  swapHigh: { svg: NEW_ART.swapHigh },
+  swapHands: { svg: NEW_ART.swapHands },
+  redeal: { svg: NEW_ART.redeal },
 };
 
 const trumpFace = (id: TrumpId) => {
@@ -433,6 +509,9 @@ export class Trump21View extends TableGame {
     const el = this.rowEl;
     if (!el) return;
     const ids = this.duel.trumps.player;
+    // six or seven cards overlap a little, like a hand of cards, to fit the row
+    el.classList.toggle('crowd', ids.length > 5);
+    el.style.setProperty('--n', String(Math.max(1, ids.length)));
     el.replaceChildren(
       ...ids.map((id, i) => {
         const b = document.createElement('button');
@@ -522,21 +601,26 @@ export class Trump21View extends TableGame {
     if (pop) this.targetPin!.pop();
   }
 
+  /** The totals of the cards on the table (while a hand is being dealt, only the cards already down). */
   private updateBubbles() {
     const d = this.duel;
-    const p = d.total('player');
+    const down = (side: Side) => d[side].filter((v) => this.c3.has(v));
+    const sum = (vs: number[]) => vs.reduce((a, b) => a + b, 0);
+    const mine = down('player');
+    const p = sum(mine);
     const pb = this.bubbles.player;
     if (pb) {
       pb.set(`${p} / ${d.target}`, `bubble up${p > d.target ? ' bust' : p === d.target ? ' bj' : ''}`);
-      pb.show(d.player.length > 0);
+      pb.show(mine.length > 0);
     }
     const db = this.bubbles.dealer;
     if (db) {
-      const hidden = d.dealer.length > 0 && !this.shown.has(d.dealer[0]);
-      const vis = d.dealer.slice(hidden ? 1 : 0).reduce((a, b) => a + b, 0);
-      const tot = d.total('dealer');
+      const his = down('dealer');
+      const hidden = his.length > 0 && his[0] === d.dealer[0] && !this.shown.has(d.dealer[0]);
+      const vis = sum(his.slice(hidden ? 1 : 0));
+      const tot = sum(his);
       db.set(hidden ? `? + ${vis}` : `${tot} / ${d.target}`, `bubble down${!hidden && tot > d.target ? ' bust' : ''}`);
-      db.show(d.dealer.length > 0);
+      db.show(his.length > 0);
     }
   }
 
@@ -568,13 +652,14 @@ export class Trump21View extends TableGame {
     return vals.map((v, i) => ({ v, pos: new THREE.Vector3((i - (n - 1) / 2) * gap, REST_Y + i * 0.004, z), yaw: (((v * 37) % 7) - 3) * 0.004 }));
   }
 
-  private relayoutRow(side: Side, except?: number) {
+  /** Slides a hand's cards to their places (`across`: some cross the table, slower and lifted higher). */
+  private relayoutRow(side: Side, except?: number, across = false) {
     return Promise.all(
       this.rowPlaces(side)
         .filter((p) => p.v !== except)
         .map((p) => {
           const c = this.c3.get(p.v);
-          return c ? slideCard(c, { pos: p.pos, yaw: p.yaw }, 0.3) : Promise.resolve();
+          return c ? (across ? slideCard(c, { pos: p.pos, yaw: p.yaw }, 0.55, 0.35) : slideCard(c, { pos: p.pos, yaw: p.yaw }, 0.3)) : Promise.resolve();
         }),
     );
   }
@@ -674,6 +759,41 @@ export class Trump21View extends TableGame {
           if (c && !c.faceUp) await flipCard(c, { dur: 0.35 });
           this.shown.add(e.value);
           this.updateBubbles();
+          break;
+        }
+        case 'swap': {
+          // Low / High Swap, Hand Swap: the cards cross the table to their new places
+          sfx.play('fan', { vol: 0.7 });
+          await Promise.all([this.relayoutRow('player', undefined, true), this.relayoutRow('dealer', undefined, true)]);
+          // what came over to your hand turns face up (the dealer's face-down card included)
+          const down = this.duel.player.map((v) => this.c3.get(v)).filter((c): c is Card3D => !!c && !c.faceUp);
+          if (down.length) await Promise.all(down.map((c) => flipCard(c, { dur: 0.4 })));
+          for (const v of this.duel.player) this.shown.add(v);
+          if (this.duel.glimpsed && this.duel.dealer.length) this.shown.add(this.duel.dealer[0]);
+          this.updateBubbles();
+          break;
+        }
+        case 'redeal': {
+          // every card back into the shoe; the draws that follow deal the hands again
+          const all = [...this.c3.values()];
+          this.c3.clear();
+          this.shown.clear();
+          for (const c of all) this.cardsT.all.splice(this.cardsT.all.indexOf(c), 1);
+          this.updateBubbles();
+          sfx.play('shove', { vol: 0.7 });
+          await collectCards(all, table.shoeMouth(), table.shoeYaw, (c) => cards.destroy(c));
+          sfx.play('shuffle', { vol: 0.6 });
+          hud.toast(t('t21.redealt'), 1400);
+          await wait(0.3);
+          break;
+        }
+        case 'overflow': {
+          // a new trump with the hand full: it shows, then goes to the discard
+          if (e.side !== 'player') break;
+          sfx.trumpDraw(rarityOf(e.id), false, this.speed);
+          await flyBonusTrump(this.g, { info: this.trumpInfo(e.id), to: null, discard: true });
+          sfx.play('shove', { vol: 0.5 });
+          hud.toast(t('t21.overflow', { name: this.trumpName(e.id) }), 1800);
           break;
         }
         case 'blocked': {
